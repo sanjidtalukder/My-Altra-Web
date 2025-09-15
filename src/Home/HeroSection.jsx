@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { Player } from "@lottiefiles/react-lottie-player";
 import { FaRocket, FaHandshake, FaSatellite, FaChartLine } from "react-icons/fa";
 
 const HeroSection = () => {
   const [isVisible, setIsVisible] = useState(false);
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
+  const navigate = useNavigate();
 
   useEffect(() => {
     // Animation trigger
@@ -25,6 +27,11 @@ const HeroSection = () => {
       window.removeEventListener('mousemove', handleMouseMove);
     };
   }, []);
+
+  // Navigation handler
+  const handleExplorePlatform = () => {
+    navigate('/pulse');
+  };
 
   // Helper functions for random values
   const getRandomPercentage = () => Math.random() * 100;
@@ -159,18 +166,17 @@ const HeroSection = () => {
           <span className="text-blue-300 font-semibold">opportunities</span>.
         </p>
 
-        {/* Enhanced CTA Buttons */}
+        {/* Enhanced CTA Buttons - Modified for navigation */}
         <div className="flex flex-col sm:flex-row gap-4 justify-center">
-          <a
-            href="#platform"
+          <button
+            onClick={handleExplorePlatform}
             className="group relative bg-gradient-to-r from-green-500 to-teal-600 text-white font-semibold py-3 px-8 rounded-full transition-all duration-500 overflow-hidden hover:shadow-lg hover:shadow-green-500/40 flex items-center gap-2"
           >
             <span className="relative z-10 flex items-center">
               <FaRocket className="text-lg mr-2 group-hover:animate-bounce" />
               Explore the Platform
             </span>
-          </a>
-        
+          </button>
         </div>
         
         {/* Real-time data indicator */}

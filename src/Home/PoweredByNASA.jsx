@@ -316,7 +316,7 @@ const PoweredByNASA = () => {
         </motion.div>
 
         {/* Call to Action */}
-        <motion.div 
+        {/* <motion.div 
           className="text-center"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -363,7 +363,7 @@ const PoweredByNASA = () => {
               Learn About NASA's Missions
             </motion.button>
           </div>
-        </motion.div>
+        </motion.div> */}
       </div>
 
       <style jsx>{`
