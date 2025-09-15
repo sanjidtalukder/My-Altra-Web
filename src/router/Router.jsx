@@ -1,8 +1,16 @@
 
 import { createBrowserRouter } from "react-router-dom";
-import Atlas from "../pages/Atlas";
+
 import Pulse from "../Pages/Pulse";
 import RootLayout from "../layouts/RootLayouts";
+import Atlas from "../Pages/Atlas";
+import Simulate from "../Pages/Simulate";
+import CityHeartbeat from "../Pages/CityHeartbeat";
+import Home from "../Home/Home";
+import Vision from "../Pages/Vision";
+import Engage from "../Pages/Engage";
+import DataLab from "../Pages/DataLab";
+
 
 
 
@@ -11,13 +19,14 @@ export const router = createBrowserRouter([
     path: "/",
     element: <RootLayout />,  
     children: [
-      { index: true, element: <Pulse /> },
+      { index: true, element: <Home /> },
+        { path: "pulse", element: <Pulse /> },
       { path: "atlas", element: <Atlas /> },
-    //   { path: "simulate", element: <div>Simulate Page</div> },
-    //   { path: "impact", element: <div>Impact Page</div> },
-    //   { path: "engage", element: <div>Engage Page</div> },
-    //   { path: "data-lab", element: <div>Data Lab Page</div> },
-    //   { path: "vision-roadmap", element: <div>Vision Roadmap Page</div> },
+      { path: "simulate", element:<Simulate></Simulate>  },
+      { path: "impact", element: <CityHeartbeat></CityHeartbeat> },
+      { path: "engage", element: <Engage></Engage> },
+      { path: "data-lab", element: <DataLab></DataLab> },
+      { path: "vision-roadmap", element: <Vision></Vision> },
     ],
   },
 ]);

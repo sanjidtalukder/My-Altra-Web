@@ -5,7 +5,8 @@ import { NavLink } from "react-router-dom";
 const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const navItems = [
-    { name: "Pulse", path: "/", icon: "📊" },
+    { name: "Home", path: "/", icon: "🏠" },
+    { name: "Pulse", path: "/Pulse", icon: "📊" },
     { name: "Atlas", path: "/atlas", icon: "🗺️" },
     { name: "Simulate", path: "/simulate", icon: "🔬" },
     { name: "Impact", path: "/impact", icon: "📈" },
