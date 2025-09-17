@@ -1,2 +1,186 @@
 @import "tailwindcss";
 @plugin "daisyui";
+/* @tailwind utilities; */
+
+/* Atlas Command Center Design System - Dark Cyberpunk Aesthetic */
+
+@layer base {
+  :root {
+    /* Dark Command Center Theme */
+    --background: 224 71% 4%;          /* Deep space blue #0a0a12 */
+     --foreground: 193 100% 85%;        /* Electric cyan text #00d4ff */
+
+    --card: 230 50% 15%;               /* Dark blue cards #16213e */
+    --card-foreground: 193 100% 85%;
+
+    --popover: 230 50% 15%;
+    --popover-foreground: 193 100% 85%;
+
+    --primary: 193 100% 50%;           /* Electric cyan #00d4ff */
+    --primary-foreground: 224 71% 4%;
+
+    --secondary: 240 38% 15%;          /* Dark blue-gray #1a1a2e */
+    --secondary-foreground: 193 100% 85%;
+
+    --muted: 240 45% 11%;              /* Very dark blue #0f0f23 */
+    --muted-foreground: 193 40% 65%;
+
+    --accent: 22 100% 50%;             /* Electric orange #ff6b00 */
+    --accent-foreground: 224 71% 4%;
+
+    --destructive: 343 81% 62%;        /* Neon red #ff4757 */
+    --destructive-foreground: 224 71% 4%;
+
+    --border: 240 38% 25%;
+    --input: 240 38% 20%;
+    --ring: 193 100% 50%;
+
+    --radius: 0.75rem;
+
+    /* Custom Atlas Variables */
+    --glow-primary: 193 100% 50%;
+    --glow-accent: 22 100% 50%;
+    --glow-success: 150 100% 50%;
+    --glow-warning: 35 100% 50%;
+    --glow-danger: 343 81% 62%;
+    
+    /* Gradients */
+    --gradient-primary: linear-gradient(135deg, hsl(193 100% 50%), hsl(213 100% 60%));
+    --gradient-danger: linear-gradient(135deg, hsl(343 81% 62%), hsl(22 100% 50%));
+    --gradient-success: linear-gradient(135deg, hsl(150 100% 50%), hsl(175 100% 45%));
+    --gradient-card: linear-gradient(145deg, hsl(230 50% 15%), hsl(240 38% 18%));
+    
+    /* Shadows & Glows */
+    --shadow-glow: 0 0 20px hsl(var(--glow-primary) / 0.3);
+    --shadow-glow-accent: 0 0 20px hsl(var(--glow-accent) / 0.3);
+    --shadow-card: 0 8px 32px hsl(224 71% 4% / 0.5);
+    --shadow-inset: inset 0 1px 2px hsl(193 100% 50% / 0.1);
+  }
+
+  body {
+    @apply bg-base-100 text-primary;
+    background: radial-gradient(ellipse at center, hsl(224 71% 6%) 0%, hsl(224 71% 4%) 100%);
+    /* min-height: 100vh; */
+  }
+
+  /* Cyberpunk Scrollbar */
+  ::-webkit-scrollbar {
+    width: 8px;
+  }
+  
+  ::-webkit-scrollbar-track {
+    background: hsl(var(--muted));
+  }
+  
+  ::-webkit-scrollbar-thumb {
+    background: hsl(var(--primary));
+    border-radius: 4px;
+    box-shadow: var(--shadow-glow);
+  }
+  
+  ::-webkit-scrollbar-thumb:hover {
+    background: hsl(var(--accent));
+  }
+}
+
+@layer components {
+  /* Glowing Elements */
+  .glow-primary {
+    box-shadow: var(--shadow-glow);
+    border: 1px solid hsl(var(--primary) / 0.3);
+  }
+  
+  .glow-accent {
+    box-shadow: var(--shadow-glow-accent);
+    border: 1px solid hsl(var(--accent) / 0.3);
+  }
+  
+  /* Animated Elements */
+  .pulse-glow {
+    animation: pulse-glow 2s ease-in-out infinite alternate;
+  }
+  
+  .floating {
+    animation: floating 3s ease-in-out infinite;
+  }
+  
+  /* Network Visualization */
+  .node-hazard {
+    @apply rounded-full;
+    background: var(--gradient-danger);
+    box-shadow: 0 0 15px hsl(var(--glow-danger) / 0.6);
+    animation: pulse-danger 2s ease-in-out infinite;
+  }
+  
+  .node-community {
+    @apply rounded-full;
+    background: var(--gradient-primary);
+    box-shadow: 0 0 12px hsl(var(--glow-primary) / 0.5);
+  }
+  
+  .pathway {
+    stroke: hsl(var(--primary));
+    stroke-width: 2;
+    filter: drop-shadow(0 0 3px hsl(var(--primary)));
+    animation: pathway-flow 3s linear infinite;
+  }
+  
+  /* Command Panel Styles */
+  .command-panel {
+    background: var(--gradient-card);
+    border: 1px solid hsl(var(--border));
+    box-shadow: var(--shadow-card);
+    backdrop-filter: blur(10px);
+  }
+  
+  /* Holographic Text Effect */
+  .holo-text {
+    color: hsl(var(--primary));
+    text-shadow: 
+      0 0 5px hsl(var(--primary) / 0.5),
+      0 0 10px hsl(var(--primary) / 0.3),
+      0 0 15px hsl(var(--primary) / 0.2);
+  }
+}
+
+@layer utilities {
+  /* Animation Keyframes */
+  @keyframes pulse-glow {
+    0% { box-shadow: 0 0 15px hsl(var(--primary) / 0.4); }
+    100% { box-shadow: 0 0 25px hsl(var(--primary) / 0.8); }
+  }
+  
+  @keyframes pulse-danger {
+    0% { box-shadow: 0 0 15px hsl(var(--glow-danger) / 0.4); }
+    100% { box-shadow: 0 0 25px hsl(var(--glow-danger) / 0.8); }
+  }
+  
+  @keyframes floating {
+    0% { transform: translateY(0px); }
+    50% { transform: translateY(-10px); }
+    100% { transform: translateY(0px); }
+  }
+  
+  @keyframes pathway-flow {
+    0% { stroke-dasharray: 0 10; }
+    50% { stroke-dasharray: 5 5; }
+    100% { stroke-dasharray: 10 0; }
+  }
+  
+  /* Utility Classes */
+  .text-glow {
+    text-shadow: 0 0 8px currentColor;
+  }
+  
+  .border-glow {
+    border: 1px solid;
+    box-shadow: 0 0 8px currentColor;
+  }
+  
+  .bg-grid {
+    background-image: 
+      linear-gradient(hsl(var(--primary) / 0.1) 1px, transparent 1px),
+      linear-gradient(90deg, hsl(var(--primary) / 0.1) 1px, transparent 1px);
+    background-size: 50px 50px;
+  }
+}

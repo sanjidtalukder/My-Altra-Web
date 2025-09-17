@@ -1,620 +1,483 @@
-import { useState, useEffect, useRef } from "react";
+import React, { useState, useRef, useEffect } from 'react';
+import { FiGlobe, FiUsers, FiMap, FiBarChart2, FiCpu, FiLayers, FiPlay, FiPause, FiArrowRight, FiArrowLeft, FiInfo } from 'react-icons/fi';
 
-// Utility function for classNames
-const cn = (...classes) => classes.filter(Boolean).join(" ");
+const Vision = () => {
+  const [currentPhase, setCurrentPhase] = useState(0);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [showHelp, setShowHelp] = useState(false);
+  const containerRef = useRef(null);
 
-// Timeline Component
-const Timeline = () => {
-  const [activeIndex, setActiveIndex] = useState(0);
-
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setActiveIndex((prev) => (prev + 1) % timelineItems.length);
-    }, 3000);
-    return () => clearInterval(interval);
-  }, []);
-
-  const timelineItems = [
+  // Phases data
+  const phases = [
     {
-      title: "Hackathon Prototype",
-      description: "Born from urgency and innovation",
-      icon: "💡"
+      title: "The Spark",
+      subtitle: "Hackathon MVP in Dhaka, Bangladesh",
+      description: "Weaving the first synapse between satellite data and street action.",
+      features: [
+        { icon: <FiBarChart2 />, name: "StreetPulse", desc: "Real-time community feedback" },
+        { icon: <FiLayers />, name: "OrbitView Swipe", desc: "Compare time periods" },
+        { icon: <FiCpu />, name: "VeracityMissions", desc: "Data validation tasks" }
+      ],
+      data: "Powered by: NASA MODIS LST, NASA IMERG, NASA AOD",
+      visualization: "spark"
     },
     {
-      title: "Pilot Deployment",
-      description: "Tested in real-world urban stress zones",
-      icon: "🏗️"
+      title: "City-Scale Deployment",
+      subtitle: "The nervous system awakens across Dhaka",
+      description: "The nervous system awakens. A city learns to feel its stress points.",
+      stats: [
+        { label: "City Wellbeing Index", value: "72%" },
+        { label: "Citizen Missions Completed", value: "1,428" }
+      ],
+      data: "Powered by: NASA VIIRS Night Lights, Social Vulnerability Index",
+      visualization: "city"
     },
     {
-      title: "Multi-City Rollout",
-      description: "Scaling across continents with local intelligence",
-      icon: "🌍"
+      title: "Predictive Intelligence",
+      subtitle: "From reaction to prevention",
+      description: "Healing the city before the fever breaks.",
+      comparisons: [
+        { label: "Forecasted Heatwave", value: "38°C", subtext: "Next week" },
+        { label: "With Intervention", value: "32°C", subtext: "6°C reduction" }
+      ],
+      data: "Powered by: NASA NEX-GDDP, NASA IMERG, NASA MODIS",
+      visualization: "predictive"
+    },
+    {
+      title: "Regional Network",
+      subtitle: "Cities are not islands",
+      description: "Resilience is a network. Cities sharing data, alerts, and solutions.",
+      alert: {
+        title: "Regional Alert",
+        message: "Drought detected in watershed. Conservation measures activated across region."
+      },
+      data: "Data sharing across 5 cities, 3.2M residents protected",
+      visualization: "regional"
+    },
+    {
+      title: "Planetary System",
+      subtitle: "A digital twin for planetary health",
+      description: "This is our future. A connected planet working in harmony.",
+      missions: [
+        { name: "Landsat", description: "Land cover monitoring since 1972", icon: "🛰️" },
+        { name: "MODIS", description: "Thermal anomaly detection", icon: "🔥" },
+        { name: "VIIRS", description: "Nighttime lights and energy data", icon: "💡" },
+        { name: "GRACE-FO", description: "Gravity and water mass measurement", icon: "🌊" },
+        { name: "SRTM", description: "Topographic elevation data", icon: "⛰️" },
+        { name: "IMERG", description: "Global precipitation measurement", icon: "🌧️" }
+      ],
+      visualization: "planetary"
     }
   ];
 
-  return (
-    <div className="relative py-20 lg:py-32">
-      {/* Dynamic timeline line with gradient */}
-      <div className="absolute left-1/2 transform -translate-x-1/2 h-full w-1 bg-gradient-to-b from-purple-500/40 via-blue-400/40 to-cyan-400/40 opacity-80 rounded-full">
-        <div className="absolute top-0 w-full h-1/3 bg-gradient-to-b from-purple-500/50 to-transparent opacity-50 rounded-full animate-pulse" />
-      </div>
+  // Handle scroll events
+  useEffect(() => {
+    const handleScroll = () => {
+      if (!containerRef.current) return;
       
-      {/* Floating particles around timeline */}
-      <div className="absolute left-1/2 top-1/4 transform -translate-x-1/2 w-3 h-3 bg-purple-500/30 rounded-full animate-float" />
-      <div className="absolute left-1/2 top-2/3 transform -translate-x-1/2 w-2 h-2 bg-cyan-400/40 rounded-full animate-float" style={{animationDelay: '1s'}} />
+      const scrollPosition = containerRef.current.scrollLeft;
+      const containerWidth = containerRef.current.clientWidth;
+      const phaseIndex = Math.floor(scrollPosition / containerWidth);
       
-      <div className="space-y-20 lg:space-y-32">
-        {timelineItems.map((item, index) => (
-          <div
-            key={index}
-            className={cn(
-              "relative flex items-center transition-all duration-1000 transform",
-              index % 2 === 0 ? "justify-start lg:pr-8" : "justify-end lg:pl-8"
-            )}
-          >
-            {/* Enhanced timeline dot */}
-            <div
-              className={cn(
-                "absolute left-1/2 transform -translate-x-1/2 w-8 h-8 rounded-full border-4 transition-all duration-700 z-20",
-                activeIndex >= index 
-                  ? "bg-purple-500 border-cyan-400 shadow-lg shadow-cyan-400/50 scale-125" 
-                  : "bg-gray-800 border-gray-600 scale-100 hover:scale-110"
-              )}
-            >
-              {activeIndex >= index && (
-                <div className="absolute inset-0 w-full h-full bg-purple-500/30 rounded-full animate-ping" />
-              )}
+      if (phaseIndex !== currentPhase) {
+        setCurrentPhase(phaseIndex);
+      }
+    };
+
+    if (containerRef.current) {
+      containerRef.current.addEventListener('scroll', handleScroll);
+    }
+
+    return () => {
+      if (containerRef.current) {
+        containerRef.current.removeEventListener('scroll', handleScroll);
+      }
+    };
+  }, [currentPhase]);
+
+  // Auto-scroll through phases for demo
+  useEffect(() => {
+    if (!isPlaying || !containerRef.current) return;
+
+    const interval = setInterval(() => {
+      if (currentPhase < phases.length - 1) {
+        goToPhase(currentPhase + 1);
+      } else {
+        setIsPlaying(false);
+      }
+    }, 5000);
+
+    return () => clearInterval(interval);
+  }, [isPlaying, currentPhase]);
+
+  // Navigate to specific phase
+  const goToPhase = (phaseIndex) => {
+    setCurrentPhase(phaseIndex);
+    if (containerRef.current) {
+      containerRef.current.scrollTo({
+        left: phaseIndex * containerRef.current.clientWidth,
+        behavior: 'smooth'
+      });
+    }
+  };
+
+  // Toggle play/pause
+  const togglePlay = () => {
+    setIsPlaying(!isPlaying);
+  };
+
+  // Visualizations for each phase
+  const renderVisualization = (type) => {
+    switch(type) {
+      case "spark":
+        return (
+          <div className="relative w-64 h-64 mx-auto mb-8">
+            <div className="absolute inset-0 bg-blue-800 rounded-full opacity-30"></div>
+            
+            <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-16 h-16 bg-cyan-500 rounded-full flex items-center justify-center shadow-lg">
+              <FiMap className="text-white text-2xl" />
             </div>
             
-            {/* Enhanced content card */}
-            <div
-              className={cn(
-                "group relative bg-gray-900/80 backdrop-blur-md p-8 lg:p-10 rounded-2xl shadow-xl border border-gray-700 max-w-lg transition-all duration-700 hover:shadow-cyan-400/20 hover:border-cyan-400/50",
-                index % 2 === 0 ? "mr-4 lg:mr-12" : "ml-4 lg:ml-12",
-                activeIndex >= index 
-                  ? "opacity-100 translate-y-0" 
-                  : "opacity-70 scale-95 translate-y-4"
-              )}
-            >
-              {/* Card background gradient */}
-              <div className="absolute inset-0 bg-gradient-to-br from-purple-900/20 to-cyan-900/20 opacity-0 group-hover:opacity-100 transition-opacity duration-500 rounded-2xl" />
+            {[0, 1, 2, 3, 4].map((i) => {
+              const angle = (i / 5) * Math.PI * 2;
+              const radius = 100;
+              const x = radius * Math.cos(angle);
+              const y = radius * Math.sin(angle);
               
-              <div className="relative z-10">
-                <div className="flex items-center gap-6 mb-6">
-                  <span className="text-4xl lg:text-5xl group-hover:scale-110 transition-transform duration-300">
-                    {item.icon}
-                  </span>
-                  <h3 className="text-2xl lg:text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-cyan-400 group-hover:from-purple-300 group-hover:to-cyan-300 transition-colors">
-                    {item.title}
-                  </h3>
+              return (
+                <div
+                  key={i}
+                  className="absolute w-10 h-10 bg-green-500 rounded-full flex items-center justify-center shadow-md"
+                  style={{
+                    left: `calc(50% + ${x}px)`,
+                    top: `calc(50% + ${y}px)`,
+                    transform: 'translate(-50%, -50%)'
+                  }}
+                >
+                  <FiUsers className="text-white" />
                 </div>
-                <p className="text-lg lg:text-xl text-gray-300 leading-relaxed group-hover:text-gray-100 transition-colors">
-                  {item.description}
-                </p>
-              </div>
-              
-              {/* Progress indicator */}
-              <div className="absolute bottom-0 left-0 w-full h-1 bg-gray-700/20 rounded-b-2xl overflow-hidden">
-                <div 
-                  className={cn(
-                    "h-full bg-gradient-to-r from-purple-500 to-cyan-500 transition-all duration-1000",
-                    activeIndex >= index ? "w-full" : "w-0"
-                  )}
-                />
-              </div>
-            </div>
+              );
+            })}
 
-            {/* Connecting lines */}
-            <div 
-              className={cn(
-                "absolute top-1/2 w-20 lg:w-32 h-px bg-gradient-to-r from-purple-500 to-cyan-500 opacity-0 transition-all duration-700",
-                index % 2 === 0 ? "right-8 lg:right-16" : "left-8 lg:left-16",
-                activeIndex >= index ? "opacity-100 scale-x-100" : "scale-x-0"
-              )}
-            />
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-};
-
-// PartnerGrid Component
-const PartnerGrid = () => {
-  const partners = [
-    {
-      name: "NASA",
-      icon: "🛰️",
-      description: "Earth data fusion and satellite intelligence",
-      color: "from-blue-500/20 to-purple-500/20"
-    },
-    {
-      name: "Local Agencies",
-      icon: "🏛️",
-      description: "Urban planning and hazard response coordination",
-      color: "from-green-500/20 to-teal-500/20"
-    },
-    {
-      name: "NGOs",
-      icon: "🌱",
-      description: "Community engagement and equity initiatives",
-      color: "from-emerald-500/20 to-cyan-500/20"
-    },
-    {
-      name: "Citizen Groups",
-      icon: "👥",
-      description: "Feedback loops and lived experience insights",
-      color: "from-orange-500/20 to-red-500/20"
-    }
-  ];
-
-  return (
-    <section className="py-20 lg:py-32 relative">
-      {/* Background patterns */}
-      <div className="absolute inset-0 opacity-10">
-        <div className="absolute top-1/4 left-1/4 w-64 h-64 bg-gradient-to-br from-purple-500/20 to-cyan-500/20 rounded-full blur-3xl animate-pulse" />
-        <div className="absolute bottom-1/4 right-1/4 w-80 h-80 bg-gradient-to-br from-purple-500/20 to-cyan-500/20 rounded-full blur-3xl animate-pulse" style={{animationDelay: '2s'}} />
-      </div>
-
-      <div className="relative z-10">
-        <div className="text-center mb-20">
-          <h3 className="text-4xl lg:text-6xl font-bold bg-gradient-to-r from-purple-400 to-cyan-400 bg-clip-text text-transparent mb-8">
-            Our Collaborators
-          </h3>
-          <div className="w-24 h-1 bg-gradient-to-r from-purple-500 to-cyan-500 mx-auto mb-8 rounded-full" />
-          <p className="text-xl lg:text-2xl text-gray-300 max-w-3xl mx-auto leading-relaxed">
-            Building urban resilience through strategic partnerships and shared expertise
-          </p>
-        </div>
-        
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 lg:gap-10">
-          {partners.map((partner, index) => (
-            <div
-              key={partner.name}
-              className={cn(
-                "group relative bg-gray-900/60 backdrop-blur-md border border-gray-700 rounded-3xl p-8 lg:p-10",
-                "hover:border-cyan-400/60 transition-all duration-700 hover:scale-105 hover:-rotate-1",
-                "cursor-pointer"
-              )}
-              style={{ animationDelay: `${index * 0.15}s` }}
-            >
-              {/* Dynamic background gradient */}
-              <div className={cn(
-                "absolute inset-0 bg-gradient-to-br opacity-0 group-hover:opacity-100",
-                "transition-opacity duration-700 rounded-3xl",
-                partner.color
-              )} />
-              
-              {/* Floating icon container */}
-              <div className="relative z-10 mb-8">
-                <div className="relative inline-block">
-                  <div className="text-5xl lg:text-6xl mb-6 transform group-hover:scale-125 group-hover:rotate-12 transition-all duration-500">
-                    {partner.icon}
-                  </div>
-                  {/* Icon glow effect */}
-                  <div className="absolute inset-0 text-5xl lg:text-6xl opacity-0 group-hover:opacity-30 transition-opacity duration-500 blur-sm">
-                    {partner.icon}
-                  </div>
-                </div>
-              </div>
-              
-              <div className="relative z-10 space-y-4">
-                <h4 className="text-2xl lg:text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-cyan-400 group-hover:from-purple-300 group-hover:to-cyan-300 transition-colors duration-500">
-                  {partner.name}
-                </h4>
+            <svg className="absolute inset-0 w-full h-full">
+              {[0, 1, 2, 3, 4].map((i) => {
+                const angle = (i / 5) * Math.PI * 2;
+                const radius = 100;
+                const x = radius * Math.cos(angle);
+                const y = radius * Math.sin(angle);
                 
-                <p className="text-base lg:text-lg text-gray-300 group-hover:text-gray-100 transition-colors duration-500 leading-relaxed">
-                  {partner.description}
-                </p>
-              </div>
-              
-              {/* Interactive border effect */}
-              <div className="absolute inset-0 rounded-3xl bg-gradient-to-r from-purple-500/20 to-cyan-500/20 opacity-0 group-hover:opacity-20 transition-opacity duration-700" />
-              <div className="absolute -inset-0.5 rounded-3xl bg-gradient-to-r from-purple-500/30 to-cyan-500/30 opacity-0 group-hover:opacity-30 blur transition-opacity duration-700" />
-              
-              {/* Connection lines */}
-              <div className="absolute top-1/2 -right-4 w-8 h-px bg-gradient-to-r from-purple-500 to-cyan-500 opacity-0 group-hover:opacity-100 transition-opacity duration-700 hidden lg:block" />
-            </div>
-          ))}
-        </div>
-
-        {/* Partnership network visualization */}
-        <div className="mt-20 flex justify-center">
-          <div className="relative">
-            <div className="text-center">
-              <div className="inline-flex items-center gap-4 px-8 py-4 bg-gray-900/80 backdrop-blur-sm border border-gray-700 rounded-full">
-                <div className="w-3 h-3 bg-purple-500 rounded-full animate-pulse" />
-                <span className="text-lg font-medium text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-cyan-400">Connected Network</span>
-                <div className="w-3 h-3 bg-cyan-500 rounded-full animate-pulse" style={{animationDelay: '0.5s'}} />
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
-  );
-};
-
-// ImpactTargets Component
-const CountUp = ({ value, suffix, isVisible }) => {
-  const [count, setCount] = useState(0);
-  
-  useEffect(() => {
-    if (!isVisible) return;
-    
-    const target = parseInt(value);
-    const duration = 2000;
-    const increment = target / (duration / 16);
-    let current = 0;
-    
-    const timer = setInterval(() => {
-      current += increment;
-      if (current >= target) {
-        setCount(target);
-        clearInterval(timer);
-      } else {
-        setCount(Math.floor(current));
-      }
-    }, 16);
-    
-    return () => clearInterval(timer);
-  }, [isVisible, value]);
-  
-  return (
-    <span className="text-6xl md:text-7xl font-bold bg-gradient-to-r from-purple-400 to-cyan-400 bg-clip-text text-transparent">
-      {count}{suffix}
-    </span>
-  );
-};
-
-const ImpactTargets = () => {
-  const [isVisible, setIsVisible] = useState(false);
-  const sectionRef = useRef(null);
-
-  useEffect(() => {
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        if (entry.isIntersecting) {
-          setIsVisible(true);
-        }
-      },
-      { threshold: 0.3 }
-    );
-
-    if (sectionRef.current) {
-      observer.observe(sectionRef.current);
-    }
-
-    return () => observer.disconnect();
-  }, []);
-
-  const impactStats = [
-    {
-      value: "30",
-      suffix: "%",
-      description: "reduction in urban heat exposure by 2030",
-      icon: "🌡️"
-    },
-    {
-      value: "100",
-      suffix: "+",
-      description: "cities equipped with predictive hazard dashboards",
-      icon: "📊"
-    },
-    {
-      value: "5",
-      suffix: "M",
-      description: "residents benefiting from improved walkability",
-      icon: "🚶"
-    }
-  ];
-
-  return (
-    <section ref={sectionRef} className="py-24 lg:py-40 relative overflow-hidden">
-      {/* Dynamic background elements */}
-      <div className="absolute inset-0">
-        <div className="absolute top-0 left-1/4 w-96 h-96 bg-purple-500/5 rounded-full blur-3xl animate-pulse" />
-        <div className="absolute bottom-0 right-1/4 w-80 h-80 bg-cyan-500/5 rounded-full blur-3xl animate-pulse" style={{animationDelay: '2s'}} />
-        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-[60rem] h-[60rem] bg-gradient-to-r from-purple-500/5 to-cyan-500/5 opacity-5 rounded-full blur-3xl animate-spin" style={{animationDuration: '120s'}} />
-      </div>
-
-      <div className="relative z-10 container mx-auto px-6 lg:px-8">
-        <div className="text-center mb-24">
-          <h3 className="text-5xl lg:text-7xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-cyan-400 mb-10 tracking-tight">Impact Goals</h3>
-          <div className="w-32 h-1 bg-gradient-to-r from-purple-500 to-cyan-500 mx-auto mb-10 rounded-full" />
-          <p className="text-2xl lg:text-3xl text-gray-300 max-w-5xl mx-auto leading-relaxed font-light">
-            Measurable outcomes that transform urban environments and protect vulnerable communities
-          </p>
-        </div>
-        
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-16 lg:gap-20">
-          {impactStats.map((stat, index) => (
-            <div
-              key={index}
-              className={cn(
-                "text-center group relative",
-                "hover:scale-110 transition-all duration-700 hover:-rotate-1"
-              )}
-              style={{ animationDelay: `${index * 0.3}s` }}
-            >
-              {/* Card background */}
-              <div className="relative bg-gray-900/40 backdrop-blur-sm border border-gray-700 rounded-3xl p-12 lg:p-16 group-hover:border-cyan-400/50 transition-all duration-700">
-                {/* Floating icon */}
-                <div className="mb-10 relative">
-                  <div className="text-6xl lg:text-8xl group-hover:animate-bounce transform group-hover:scale-125 transition-all duration-500">
-                    {stat.icon}
-                  </div>
-                  {/* Icon shadow */}
-                  <div className="absolute inset-0 text-6xl lg:text-8xl opacity-0 group-hover:opacity-20 transition-opacity duration-500 blur-sm">
-                    {stat.icon}
-                  </div>
-                </div>
-                
-                {/* Counter display */}
-                <div className="mb-8 overflow-hidden relative">
-                  <div className="relative z-10">
-                    <CountUp value={stat.value} suffix={stat.suffix} isVisible={isVisible} />
-                  </div>
-                  {/* Counter glow */}
-                  <div className="absolute inset-0 opacity-0 group-hover:opacity-30 transition-opacity duration-500">
-                    <CountUp value={stat.value} suffix={stat.suffix} isVisible={isVisible} />
-                  </div>
-                </div>
-                
-                <p className="text-xl lg:text-2xl text-gray-300 max-w-sm mx-auto leading-relaxed group-hover:text-gray-100 transition-colors duration-500">
-                  {stat.description}
-                </p>
-                
-                {/* Progress indicator */}
-                <div className="mt-10 h-2 bg-gray-700/20 rounded-full overflow-hidden">
-                  <div 
-                    className={cn(
-                      "h-full bg-gradient-to-r from-purple-500 to-cyan-500 transition-all duration-2000 rounded-full",
-                      isVisible ? "w-full" : "w-0"
-                    )}
-                    style={{ transitionDelay: `${index * 0.5}s` }}
+                return (
+                  <line
+                    key={i}
+                    x1="50%"
+                    y1="50%"
+                    x2={`calc(50% + ${x}px)`}
+                    y2={`calc(50% + ${y}px)`}
+                    stroke="rgba(34, 211, 238, 0.5)"
+                    strokeWidth="2"
                   />
+                );
+              })}
+            </svg>
+          </div>
+        );
+      
+      case "city":
+        return (
+          <div className="relative w-80 h-64 mx-auto mb-8 bg-blue-900/20 rounded-xl p-4">
+            <div className="grid grid-cols-5 gap-2">
+              {Array.from({ length: 25 }).map((_, i) => {
+                const vulnerability = Math.random();
+                return (
+                  <div
+                    key={i}
+                    className="w-full h-8 rounded transition-all duration-300 hover:scale-110"
+                    style={{
+                      backgroundColor: `rgb(${255 * vulnerability}, ${255 * (1 - vulnerability)}, 0)`,
+                      opacity: 0.7
+                    }}
+                    title={`Vulnerability: ${Math.round(vulnerability * 100)}%`}
+                  />
+                );
+              })}
+            </div>
+            <div className="text-center mt-4 text-cyan-300 text-sm">
+              Urban vulnerability heatmap
+            </div>
+          </div>
+        );
+      
+      case "predictive":
+        return (
+          <div className="relative w-80 h-64 mx-auto mb-8">
+            <div className="flex justify-between items-end h-40">
+              <div className="flex flex-col items-center">
+                <div className="bg-red-500/50 w-12 rounded-t-lg" style={{ height: '80%' }}></div>
+                <div className="text-red-300 text-sm mt-2">38°C</div>
+                <div className="text-red-400 text-xs">Before</div>
+              </div>
+              <div className="flex flex-col items-center">
+                <div className="bg-green-500/50 w-12 rounded-t-lg" style={{ height: '60%' }}></div>
+                <div className="text-green-300 text-sm mt-2">32°C</div>
+                <div className="text-green-400 text-xs">After</div>
+              </div>
+            </div>
+            <div className="text-cyan-300 text-center mt-4 text-sm">
+              Heat reduction through intervention
+            </div>
+          </div>
+        );
+      
+      case "regional":
+        return (
+          <div className="relative w-80 h-64 mx-auto mb-8">
+            <div className="flex justify-around items-center h-full">
+              {['Dhaka', 'Delhi', 'Mumbai', 'Chennai', 'Karachi'].map((city, i) => (
+                <div key={i} className="flex flex-col items-center">
+                  <div className="w-10 h-10 bg-cyan-500 rounded-full flex items-center justify-center mb-2 shadow-md">
+                    <div className="text-white text-xs">{city[0]}</div>
+                  </div>
+                  <div className="text-cyan-300 text-xs">{city}</div>
+                </div>
+              ))}
+            </div>
+            <div className="text-cyan-300 text-center mt-4 text-sm">
+              Connected cities network
+            </div>
+          </div>
+        );
+      
+      case "planetary":
+        return (
+          <div className="relative w-80 h-64 mx-auto mb-8">
+            <div className="w-40 h-40 mx-auto bg-gradient-to-br from-blue-500 to-green-500 rounded-full shadow-lg flex items-center justify-center">
+              <FiGlobe className="text-white text-4xl" />
+            </div>
+            <div className="text-cyan-300 text-center mt-4 text-sm">
+              Global planetary monitoring system
+            </div>
+          </div>
+        );
+      
+      default:
+        return null;
+    }
+  };
+
+  return (
+    <div className="relative w-full min-h-screen bg-gradient-to-br from-gray-900 via-blue-900 to-black overflow-hidden">
+      {/* Help overlay */}
+      {showHelp && (
+        <div className="absolute inset-0 bg-black/80 z-50 flex items-center justify-center p-4">
+          <div className="bg-gray-800 rounded-xl max-w-md w-full p-6">
+            <h3 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
+              <FiInfo className="text-cyan-400" /> How to use this visualization
+            </h3>
+            <ul className="text-gray-300 space-y-3">
+              <li>• Use the navigation buttons or dots to explore different phases</li>
+              <li>• Click the play button to automatically move through the journey</li>
+              <li>• Each phase shows a different aspect of our vision</li>
+              <li>• Hover over elements to see additional information</li>
+            </ul>
+            <button 
+              className="mt-6 w-full py-2 bg-cyan-600 hover:bg-cyan-700 text-white rounded-lg transition-colors"
+              onClick={() => setShowHelp(false)}
+            >
+              Got it!
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Header */}
+      <header className="relative z-10 pt-8 px-8 flex justify-between items-center">
+        <div>
+          <h1 className="text-2xl font-bold text-white">ASTRA Vision</h1>
+          <p className="text-cyan-300">The evolution of urban resilience</p>
+        </div>
+        
+        <div className="flex gap-4">
+          <button 
+            className="p-2 bg-gray-800 hover:bg-gray-700 text-white rounded-full transition-colors"
+            onClick={() => setShowHelp(true)}
+            title="Show help"
+          >
+            <FiInfo size={20} />
+          </button>
+          <button 
+            className="p-2 bg-cyan-600 hover:bg-cyan-700 text-white rounded-full transition-colors flex items-center gap-2"
+            onClick={togglePlay}
+            title={isPlaying ? "Pause" : "Auto-play"}
+          >
+            {isPlaying ? <FiPause size={20} /> : <FiPlay size={20} />}
+          </button>
+        </div>
+      </header>
+
+      {/* Progress bar */}
+      <div className="relative z-10 px-8 pt-4">
+        <div className="w-full bg-gray-700 rounded-full h-2">
+          <div 
+            className="bg-cyan-500 h-2 rounded-full transition-all duration-500"
+            style={{ width: `${(currentPhase / (phases.length - 1)) * 100}%` }}
+          ></div>
+        </div>
+        <div className="flex justify-between text-sm text-gray-400 mt-2">
+          <span>Phase {currentPhase + 1}</span>
+          <span>{phases[currentPhase].title}</span>
+        </div>
+      </div>
+
+      {/* Main content */}
+      <div className="relative flex-1 py-8">
+        {/* Navigation arrows */}
+        {currentPhase > 0 && (
+          <button 
+            className="absolute left-4 top-1/2 transform -translate-y-1/2 z-20 p-3 bg-gray-800/80 hover:bg-gray-700 text-white rounded-full transition-colors"
+            onClick={() => goToPhase(currentPhase - 1)}
+            title="Previous phase"
+          >
+            <FiArrowLeft size={24} />
+          </button>
+        )}
+        
+        {currentPhase < phases.length - 1 && (
+          <button 
+            className="absolute right-4 top-1/2 transform -translate-y-1/2 z-20 p-3 bg-gray-800/80 hover:bg-gray-700 text-white rounded-full transition-colors"
+            onClick={() => goToPhase(currentPhase + 1)}
+            title="Next phase"
+          >
+            <FiArrowRight size={24} />
+          </button>
+        )}
+
+        {/* Scrolling container */}
+        <div
+          ref={containerRef}
+          className="flex overflow-x-auto h-full snap-x snap-mandatory scroll-smooth hide-scrollbar"
+          style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+        >
+          {phases.map((phase, index) => (
+            <section
+              key={index}
+              className="min-w-full h-full flex items-center justify-center snap-start p-4 md:p-8"
+            >
+              <div className="max-w-4xl w-full bg-gray-800/30 backdrop-blur-md rounded-2xl p-6 md:p-8 border border-gray-700/50">
+                <div className="text-center mb-2">
+                  <span className="text-cyan-400 font-semibold">Phase {index + 1}</span>
+                  <h2 className="text-3xl md:text-4xl font-bold text-white mt-2">{phase.title}</h2>
+                  <p className="text-lg text-gray-300 mt-2">{phase.subtitle}</p>
                 </div>
 
-                {/* Hover glow effect */}
-                <div className="absolute inset-0 rounded-3xl bg-gradient-to-r from-purple-500/10 to-cyan-500/10 opacity-0 group-hover:opacity-10 transition-opacity duration-700" />
-              </div>
+                {/* Visualization */}
+                {renderVisualization(phase.visualization)}
 
-              {/* Orbital elements */}
-              <div className="absolute -top-4 -right-4 w-8 h-8 bg-purple-500/20 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-              <div className="absolute -bottom-4 -left-4 w-6 h-6 bg-cyan-500/20 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-            </div>
+                <div className="bg-gray-900/50 rounded-xl p-6 mt-6">
+                  <p className="text-lg text-cyan-100 text-center mb-6 italic">"{phase.description}"</p>
+                  
+                  {/* Features */}
+                  {phase.features && (
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6">
+                      {phase.features.map((feature, i) => (
+                        <div key={i} className="bg-gray-800/50 p-4 rounded-lg text-center">
+                          <div className="inline-flex items-center justify-center w-10 h-10 bg-cyan-500/10 rounded-lg mb-2 text-cyan-400">
+                            {feature.icon}
+                          </div>
+                          <h3 className="text-white font-semibold mb-1">{feature.name}</h3>
+                          <p className="text-gray-300 text-sm">{feature.desc}</p>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                  
+                  {/* Stats */}
+                  {phase.stats && (
+                    <div className="flex flex-col md:flex-row gap-6 justify-center items-center mt-6">
+                      {phase.stats.map((stat, i) => (
+                        <div key={i} className="text-center">
+                          <div className="text-3xl font-bold text-cyan-400">{stat.value}</div>
+                          <div className="text-gray-300 text-sm mt-1">{stat.label}</div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                  
+                  {/* Comparisons */}
+                  {phase.comparisons && (
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
+                      {phase.comparisons.map((comp, i) => (
+                        <div key={i} className={`p-4 rounded-lg text-center ${
+                          i === 0 ? 'bg-red-900/30' : 'bg-green-900/30'
+                        }`}>
+                          <div className="text-sm text-gray-300 mb-1">{comp.label}</div>
+                          <div className={`text-2xl font-bold ${i === 0 ? 'text-red-400' : 'text-green-400'}`}>
+                            {comp.value}
+                          </div>
+                          <div className="text-xs text-gray-400 mt-1">{comp.subtext}</div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                  
+                  {/* Alert */}
+                  {phase.alert && (
+                    <div className="mt-6 p-4 bg-amber-900/30 rounded-lg">
+                      <div className="text-amber-300 font-semibold mb-2">{phase.alert.title}</div>
+                      <div className="text-amber-200 text-sm">{phase.alert.message}</div>
+                    </div>
+                  )}
+                  
+                  {/* Missions */}
+                  {phase.missions && (
+                    <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mt-6">
+                      {phase.missions.map((mission, i) => (
+                        <div key={i} className="bg-gray-800/50 p-3 rounded-lg text-center">
+                          <div className="text-cyan-400 font-semibold text-sm">{mission.name}</div>
+                          <div className="text-gray-300 text-xs">{mission.description}</div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                  
+                  {/* Data source */}
+                  {phase.data && (
+                    <div className="mt-6 text-sm text-cyan-300/80 text-center">
+                      {phase.data}
+                    </div>
+                  )}
+                </div>
+              </div>
+            </section>
           ))}
         </div>
-
-        {/* Connection visualization */}
-        <div className="mt-24 flex justify-center items-center gap-8">
-          <div className="w-32 h-px bg-gradient-to-r from-purple-500 to-cyan-500" />
-          <div className="relative">
-            <div className="w-6 h-6 bg-purple-500 rounded-full animate-pulse" />
-            <div className="absolute inset-0 w-6 h-6 bg-purple-500/30 rounded-full animate-ping" />
-          </div>
-          <div className="text-lg font-medium text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-cyan-400">Unified Impact</div>
-          <div className="relative">
-            <div className="w-6 h-6 bg-cyan-500 rounded-full animate-pulse" style={{animationDelay: '0.5s'}} />
-            <div className="absolute inset-0 w-6 h-6 bg-cyan-500/30 rounded-full animate-ping" style={{animationDelay: '0.5s'}} />
-          </div>
-          <div className="w-32 h-px bg-gradient-to-r from-purple-500 to-cyan-500" />
-        </div>
       </div>
-    </section>
-  );
-};
 
-// CallToAction Component
-const CallToAction = () => {
-  return (
-    <section className="py-20 relative overflow-hidden">
-      {/* Background effects */}
-      <div className="absolute inset-0 bg-gradient-to-b from-gray-900 to-black opacity-20" />
-      <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-purple-500/20 rounded-full blur-3xl animate-pulse" />
-      
-      <div className="relative z-10 text-center max-w-4xl mx-auto">
-        <h4 className="text-4xl md:text-5xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-cyan-400 mb-6">
-          Join the Movement
-        </h4>
-        
-        <p className="text-xl text-gray-300 mb-12 max-w-2xl mx-auto leading-relaxed">
-          Whether you're a planner, researcher, or citizen advocate—ASTRA is built for you. 
-          Let's shape resilient cities together.
-        </p>
-        
-        <div className="flex flex-col sm:flex-row gap-6 justify-center">
-          <button 
-            className={cn(
-              "bg-gradient-to-r from-purple-600 to-cyan-600 hover:from-purple-500 hover:to-cyan-500 text-white font-semibold px-8 py-4 text-lg rounded-lg",
-              "border border-cyan-400/30 shadow-lg shadow-cyan-400/20 hover:shadow-cyan-400/40 transition-all duration-300",
-              "hover:scale-105 transform"
-            )}
-          >
-            Become a Partner
-          </button>
-          
-          <button 
-            className={cn(
-              "border border-purple-400/50 text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-cyan-400 hover:from-purple-300 hover:to-cyan-300 px-8 py-4 text-lg font-semibold rounded-lg",
-              "backdrop-blur-sm hover:border-cyan-400 transition-all duration-300",
-              "hover:scale-105 transform"
-            )}
-          >
-            Explore the Platform
-          </button>
-        </div>
-        
-        <div className="mt-16 grid md:grid-cols-3 gap-8 text-sm text-gray-400">
-          <div className="flex items-center justify-center gap-2">
-            <span className="w-2 h-2 bg-cyan-400 rounded-full" />
-            Open Source & Collaborative
-          </div>
-          <div className="flex items-center justify-center gap-2">
-            <span className="w-2 h-2 bg-purple-400 rounded-full" />
-            Real-time Data Integration
-          </div>
-          <div className="flex items-center justify-center gap-2">
-            <span className="w-2 h-2 bg-purple-400 rounded-full" />
-            Community-Driven Solutions
-          </div>
-        </div>
-      </div>
-    </section>
-  );
-};
-
-// Main Vision Component
-export const AstraVision = () => {
-  return (
-    <div className="min-h-screen bg-gradient-to-b from-gray-900 via-black to-gray-900 text-white overflow-hidden relative">
-      {/* Animated cosmic background */}
-      <div className="fixed inset-0 pointer-events-none">
-        {/* Stars */}
-        {[...Array(100)].map((_, i) => (
-          <div
-            key={i}
-            className="absolute w-1 h-1 bg-white rounded-full animate-pulse"
-            style={{
-              top: `${Math.random() * 100}%`,
-              left: `${Math.random() * 100}%`,
-              opacity: Math.random() * 0.7 + 0.3,
-              animationDelay: `${Math.random() * 5}s`,
-              animationDuration: `${Math.random() * 3 + 2}s`
-            }}
+      {/* Navigation dots */}
+      <div className="relative z-10 pb-8 px-8 flex justify-center gap-3">
+        {phases.map((_, index) => (
+          <button
+            key={index}
+            className={`w-3 h-3 rounded-full transition-all duration-300 ${
+              currentPhase === index ? 'bg-cyan-400 scale-125' : 'bg-white/30 hover:bg-cyan-500/50'
+            }`}
+            onClick={() => goToPhase(index)}
+            title={`Go to Phase ${index + 1}: ${phases[index].title}`}
           />
         ))}
-        
-        {/* Large floating elements */}
-        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-purple-500/10 rounded-full blur-3xl animate-float-slow" />
-        <div className="absolute bottom-1/4 right-1/4 w-80 h-80 bg-cyan-500/10 rounded-full blur-3xl animate-float-slow" style={{animationDelay: '3s'}} />
-        
-        {/* Nebula effects */}
-        <div className="absolute top-0 right-0 w-[40rem] h-[40rem] bg-purple-500/15 rounded-full blur-3xl animate-pulse-slow transform rotate-45" />
-        <div className="absolute bottom-0 left-0 w-[50rem] h-[30rem] bg-cyan-500/10 rounded-full blur-3xl animate-pulse-slow" style={{animationDelay: '2s'}} />
-        
-        {/* Floating geometric elements */}
-        <div className="absolute top-1/4 left-1/4 w-2 h-2 bg-purple-400/40 rounded-full animate-float" />
-        <div className="absolute top-3/4 right-1/4 w-1 h-1 bg-cyan-400/60 rounded-full animate-float" style={{animationDelay: '1s'}} />
-        <div className="absolute top-1/2 left-3/4 w-1.5 h-1.5 bg-purple-400/30 rounded-full animate-float" style={{animationDelay: '2s'}} />
-        <div className="absolute top-1/5 right-1/2 w-0.5 h-20 bg-gradient-to-b from-purple-400/20 to-transparent opacity-20 animate-pulse" />
-        <div className="absolute bottom-1/4 left-1/2 w-32 h-0.5 bg-gradient-to-r from-purple-400/30 to-cyan-400/30 opacity-30 animate-pulse" style={{animationDelay: '1s'}} />
       </div>
 
-      {/* Hero Section */}
-      <section className="relative py-32 lg:py-40 overflow-hidden">
-        {/* Dynamic background effects */}
-        <div className="absolute inset-0 bg-gradient-to-b from-gray-900/40 via-black/60 to-gray-900/40" />
-        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-gradient-to-r from-purple-500/10 to-cyan-500/10 opacity-10 rounded-full blur-2xl animate-spin-slow" />
-        
-        <div className="relative z-10 container mx-auto px-6 lg:px-8 text-center">
-          <div className="max-w-6xl mx-auto">
-            <h2 className="text-6xl md:text-8xl lg:text-9xl font-bold mb-12 bg-gradient-to-r from-purple-400 via-cyan-400 to-purple-400 bg-clip-text text-transparent tracking-tight animate-gradient">
-              Vision
-            </h2>
-            <div className="h-px bg-gradient-to-r from-purple-500 to-cyan-500 max-w-md mx-auto mb-8 animate-expand" />
-            <h3 className="text-2xl md:text-4xl lg:text-5xl font-light mb-12 text-gray-300 animate-fade-in">
-              The Journey Ahead
-            </h3>
-            
-            <p className="text-xl md:text-2xl lg:text-3xl text-gray-400 max-w-5xl mx-auto leading-relaxed font-light animate-fade-in">
-              From prototype to planetary impact: ASTRA's path to urban resilience
-            </p>
-            
-            {/* Enhanced decorative elements */}
-            <div className="mt-20 flex justify-center items-center gap-12 animate-fade-in">
-              <div className="h-px bg-gradient-to-r from-purple-500 to-cyan-500 w-32 animate-expand" />
-              <div className="relative">
-                <div className="w-4 h-4 bg-purple-500 rounded-full animate-pulse" />
-                <div className="absolute inset-0 w-4 h-4 bg-purple-500/30 rounded-full animate-ping" />
-              </div>
-              <div className="h-px bg-gradient-to-r from-purple-500 to-cyan-500 w-32 animate-expand" />
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Timeline Section */}
-      <section className="py-20 bg-gradient-to-b from-gray-900/50 to-black/50">
-        <div className="container mx-auto px-6">
-          <div className="text-center mb-16">
-            <h3 className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-cyan-400 mb-4">Our Evolution</h3>
-            <p className="text-gray-300 max-w-2xl mx-auto">
-              Tracing the transformation from innovative concept to global urban resilience platform
-            </p>
-          </div>
-          <Timeline />
-        </div>
-      </section>
-
-      {/* Partners Section */}
-      <section className="py-20">
-        <div className="container mx-auto px-6">
-          <PartnerGrid />
-        </div>
-      </section>
-
-      {/* Impact Targets Section */}
-      <ImpactTargets />
-
-      {/* Call to Action Section */}
-      <div className="container mx-auto px-6">
-        <CallToAction />
-      </div>
-
-      {/* Custom animations */}
+      {/* Custom styles */}
       <style jsx>{`
-        @keyframes float {
-          0%, 100% { transform: translateY(0) rotate(0deg); }
-          50% { transform: translateY(-10px) rotate(5deg); }
+        .hide-scrollbar::-webkit-scrollbar {
+          display: none;
         }
-        @keyframes float-slow {
-          0%, 100% { transform: translateY(0) scale(1); }
-          50% { transform: translateY(-20px) scale(1.05); }
-        }
-        @keyframes gradient {
-          0% { background-position: 0% 50%; }
-          50% { background-position: 100% 50%; }
-          100% { background-position: 0% 50%; }
-        }
-        @keyframes expand {
-          0% { width: 0; opacity: 0; }
-          100% { width: 100%; opacity: 1; }
-        }
-        @keyframes spin-slow {
-          0% { transform: translate(-50%, -50%) rotate(0deg); }
-          100% { transform: translate(-50%, -50%) rotate(360deg); }
-        }
-        @keyframes fade-in {
-          0% { opacity: 0; transform: translateY(20px); }
-          100% { opacity: 1; transform: translateY(0); }
-        }
-        .animate-float {
-          animation: float 5s ease-in-out infinite;
-        }
-        .animate-float-slow {
-          animation: float-slow 8s ease-in-out infinite;
-        }
-        .animate-gradient {
-          background-size: 200% 200%;
-          animation: gradient 8s ease infinite;
-        }
-        .animate-expand {
-          animation: expand 1.5s ease-out forwards;
-        }
-        .animate-spin-slow {
-          animation: spin-slow 30s linear infinite;
-        }
-        .animate-fade-in {
-          animation: fade-in 1.5s ease-out forwards;
-        }
-        .animate-pulse-slow {
-          animation: pulse 4s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        .hide-scrollbar {
+          -ms-overflow-style: none;
+          scrollbar-width: none;
         }
       `}</style>
     </div>
   );
 };
 
-export default AstraVision;
+export default Vision;
