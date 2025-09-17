@@ -1,16 +1,17 @@
+import 'leaflet/dist/leaflet.css';
 import React, { useState, useEffect, useRef } from "react";
 import {
   FaPlay,
-  FaArrowRight,
-  FaSatellite,
-  FaFire,
-  FaWater,
   FaChartLine,
 } from "react-icons/fa";
 import L from "leaflet";
-import "leaflet/dist/leaflet.css";
+
 import HeroSection from "../Home/HeroSection";
 import PoweredByNASA from "../Home/PoweredByNASA";
+
+// const mapRef = useRef(null);
+// const mapInstance = useRef(null);
+
 
 const Engage = ({ switchToModule }) => {
   const [activeMission, setActiveMission] = useState(null);
@@ -23,12 +24,14 @@ const Engage = ({ switchToModule }) => {
   const mapRef = useRef(null);
   const mapInstance = useRef(null);
 
-   console.log("sss:",mapRef.current);
+  //  console.log("sss:",mapRef.current);
   // Initialize Leaflet map
-  useEffect(() => {
-    if (mapRef.current && !mapInstance.current) {
+useEffect(() => {
+  let observer;
+  let rerenderTimer;
 
-       
+  const initializeMap = () => {
+    if (mapRef.current && !mapInstance.current) {
       mapInstance.current = L.map(mapRef.current).setView([23.8103, 90.4125], 3);
 
       L.tileLayer(
@@ -37,9 +40,7 @@ const Engage = ({ switchToModule }) => {
           attribution: "Tiles © Esri & contributors",
         }
       ).addTo(mapInstance.current);
-    
 
-      // Add some sample data points
       const cities = [
         { lat: 23.8103, lng: 90.4125, name: "Dhaka" },
         { lat: 19.0760, lng: 72.8777, name: "Mumbai" },
@@ -54,26 +55,48 @@ const Engage = ({ switchToModule }) => {
           color: "#ff6b6b",
           fillColor: "#ff6b6b",
           fillOpacity: 0.7,
-          weight: 2
-        }).addTo(mapInstance.current)
-        .bindPopup(`<b>${city.name}</b><br>Heat risk: High`);
+          weight: 2,
+        })
+          .addTo(mapInstance.current)
+          .bindPopup(`<b>${city.name}</b><br>Heat risk: High`);
       });
-    }
 
-    // Cleanup function to remove map when component unmounts
-    // return () => {
-    //   if (mapInstance.current) {
-    //     mapInstance.current.remove();
-    //     mapInstance.current = null;
-    //   }
-    // };
-  }, []);
+      // ResizeObserver to keep map responsive
+      observer = new ResizeObserver(() => {
+        mapInstance.current?.invalidateSize();
+      });
+
+      observer.observe(mapRef.current);
+    }
+  };
+
+  // Initial map setup
+  initializeMap();
+
+  //  Set timer to re-render map after 5 minutes (300,000 ms)
+  rerenderTimer = setTimeout(() => {
+    if (mapInstance.current) {
+      mapInstance.current.remove();
+      mapInstance.current = null;
+    }
+    initializeMap(); // Re-initialize map
+  }, 30000); // 5 minutes
+
+  // Cleanup
+  return () => {
+    observer?.disconnect();
+    clearTimeout(rerenderTimer);
+    mapInstance.current?.remove();
+    mapInstance.current = null;
+  };
+}, []);
+
 
   /** Comparison Slider Component */
   const CompareSlider = ({ itemOne, itemTwo }) => {
     return (
       <div className="flex flex-col md:flex-row gap-4">
-        <div className="flex-1">{itemOne}</div>
+      <div className="flex-1">{itemOne}</div>
         <div className="flex-1">{itemTwo}</div>
       </div>
     );
@@ -93,7 +116,7 @@ const Engage = ({ switchToModule }) => {
         economicCost:
           prev.economicCost + Math.floor(Math.random() * 1_000_000) - 500_000,
       }));
-    }, 3000);
+    }, 30000);
     return () => clearInterval(interval);
   }, []);
 
@@ -103,7 +126,7 @@ const Engage = ({ switchToModule }) => {
   useEffect(() => {
     const interval = setInterval(() => {
       setCurrentSlide((prev) => (prev + 1) % 5);
-    }, 5000);
+    }, 30000);
     return () => clearInterval(interval);
   }, []);
 
@@ -242,8 +265,8 @@ const Engage = ({ switchToModule }) => {
 
           <CompareSlider
             itemOne={
-              <div className="h-96 rounded-lg overflow-hidden relative border border-gray-600">
-                <div ref={mapRef} className="absolute inset-0 z-0" />
+              <div className="h-96 rounded-lg overflow-hidden relative border border-gray-600  from-purple-900 via-indigo-900 to-blue-900  ">
+                <div ref={mapRef} className="absolute inset-0 z-10" />
                 <div className="absolute top-3 left-3 bg-black/70 text-white px-3 py-1 rounded text-sm uppercase tracking-wide z-10">
                   Traditional Satellite View
                 </div>

@@ -1,6 +1,5 @@
 
 import { createBrowserRouter } from "react-router-dom";
-
 import Pulse from "../Pages/Pulse";
 import RootLayout from "../layouts/RootLayouts";
 import Atlas from "../Pages/Atlas";
