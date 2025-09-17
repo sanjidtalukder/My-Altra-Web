@@ -371,12 +371,12 @@ const New = () => {
         </div>
         
         {/* Main map area */}
-        <div className="flex-1 relative">
+        <div className="flex-1 h-screen w-screen relative">
           <MapContainer
             center={[23.8103, 90.4125]}
-            zoom={11}
-            style={{ height: '100%', width: '100%' }}
-            zoomControl={false}
+    zoom={11}
+    className="h-full w-full"
+    zoomControl={false}
           >
             <TileLayer
               url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
