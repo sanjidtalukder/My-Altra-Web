@@ -78,12 +78,14 @@ const Engage = ({ switchToModule }) => {
       </div>
     );
   };
+  
 
   /* -------------------------------------------------
    * Simulate live‑metrics updates
    * ------------------------------------------------- */
   useEffect(() => {
     const interval = setInterval(() => {
+     
       setMetrics((prev) => ({
         heatExposure:
           prev.heatExposure + Math.floor(Math.random() * 1000) - 500,
@@ -161,53 +163,12 @@ const Engage = ({ switchToModule }) => {
           Hero Section with Earth Background
         ------------------------------------------------- */}
       <section>
-        {/* <div className="absolute inset-0 z-0">
-          <div className="w-full h-full bg-gradient-to-br from-blue-900 via-purple-900 to-black opacity-80" />
-          <div
-            className="absolute inset-0 bg-[url('/api/placeholder/1920/1080')] bg-cover bg-center mix-blend-overlay opacity-30"
-            aria-hidden="true"
-          />
-        </div> */}
-
-        {/* Data Overlays */}
-        {/* <div className="absolute top-20 left-10 z-10 p-4 bg-blue-900/70 backdrop-blur-sm rounded-lg">
-          <div className="flex items-center">
-            <FaFire className="text-orange-500 mr-2" />
-            <span>127 active fires detected</span>
-          </div>
-        </div> */}
-{/* 
-        <div className="absolute top-20 right-10 z-10 p-4 bg-blue-900/70 backdrop-blur-sm rounded-lg">
-          <div className="flex items-center">
-            <FaWater className="text-cyan-400 mr-2" />
-            <span>42 flood warnings</span>
-          </div>
-        </div> */}
-
-        {/* Hero text & CTA */}
-        {/* <div className="absolute bottom-20 left-1/2 transform -translate-x-1/2 z-10 text-center"> */}
-          {/* <h1 className="text-5xl md:text-7xl font-bold mb-4 bg-clip-text text-transparent bg-gradient-to-r from-cyan-400 to-blue-500">
-            ASTRA
-          </h1>
-          <p className="text-xl md:text-2xl mb-8">
-            The Digital Nervous System for Earth's Cities
-          </p>
-          <p className="text-lg mb-10 opacity-80">
-            Powered by NASA Earth Observation Data
-          </p>
-          <button
-            onClick={() => switchToModule("atlas")}
-            className="px-8 py-4 bg-gradient-to-r from-cyan-500 to-blue-600 rounded-full text-lg font-semibold hover:from-cyan-600 hover:to-blue-700 transition-all duration-300 shadow-lg hover:shadow-cyan-500/30 glow"
-          >
-            Explore the Future of Urban Resilience
-          </button> */}
           <HeroSection></HeroSection>
-         {/* </div> */}
       </section> 
-
+{/* powerdby nasa data */}
       <section>
         <div className="p-1 m-2">
-<PoweredByNASA></PoweredByNASA>
+        <PoweredByNASA></PoweredByNASA>
         </div>
         
       </section>
@@ -215,34 +176,6 @@ const Engage = ({ switchToModule }) => {
       {/* -------------------------------------------------
           NASA Missions Gallery
         ------------------------------------------------- */}
-      {/* <section className="py-16 px-4 md:px-8">
-        <h2 className="text-3xl md:text-4xl font-bold text-center mb-12">
-          Powered By <span className="text-blue-400">NASA</span> Data
-        </h2>
-
-        <div className="flex overflow-x-auto pb-6 scrollbar-hide">
-          <div className="flex space-x-6 px-4">
-            {missions.map((mission) => (
-              <div
-                key={mission.id}
-                className="flex-shrink-0 w-72 bg-gray-800 rounded-xl overflow-hidden hover:scale-105 transition-transform duration-300 cursor-pointer"
-                onClick={() => setActiveMission(mission)}
-              >
-                <div className="h-40 bg-gray-700 flex items-center justify-center">
-                  <FaSatellite className="text-5xl text-blue-400" />
-                </div>
-                <div className="p-5">
-                  <h3 className="text-xl font-bold mb-2">{mission.name}</h3>
-                  <p className="text-gray-400 mb-4">{mission.description}</p>
-                  <button className="text-cyan-400 flex items-center">
-                    View Sample Data <FaArrowRight className="ml-2" />
-                  </button>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-
         {/* Mission Modal */}
         {activeMission && (
           <div className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4">
