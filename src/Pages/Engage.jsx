@@ -3,6 +3,8 @@ import { MapContainer, TileLayer, GeoJSON, useMap, Marker, Popup } from 'react-l
 import L from 'leaflet';
 import { FiLayers, FiClock, FiMessageSquare, FiAlertTriangle, FiCheckSquare, FiUser, FiMapPin, FiThumbsUp, FiCalendar, FiX, FiPlus, FiMinus, FiSearch, FiFilter, FiEye, FiEyeOff, FiArrowRight } from 'react-icons/fi';
 import 'leaflet/dist/leaflet.css';
+import { motion } from "framer-motion";
+
 
 // Fix for default markers in Leaflet
 delete L.Icon.Default.prototype._getIconUrl;
@@ -556,286 +558,257 @@ const Engage = () => {
   };
 
   return (
-    <div className="flex h-screen bg-gray-900 text-white overflow-hidden">
-      {/* Left Column - Map (70%) */}
-      <div className="w-7/10 h-full relative">
-        <MapContainer
-          center={[23.8103, 90.4125]}
-          zoom={12}
-          style={{ height: '100%', width: '100%' }}
-          zoomControl={false}
-        >
-          {/* 3D Terrain Layer */}
-          <TileLayer
-            url="https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png"
-            attribution='Map data: &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, <a href="http://viewfinderpanoramas.org">SRTM</a> | Map style: &copy; <a href="https://opentopomap.org">OpenTopoMap</a>'
-          />
-          
-          {/* Heat data layer */}
-          {activeLayers.heat && (
-            <GeoJSON
-              data={demoHeatData}
-              style={heatStyle}
-              onEachFeature={(feature, layer) => {
-                layer.bindPopup(`
-                  <div class="p-3 bg-gray-800 text-white rounded-lg shadow-lg">
-                    <h3 class="font-bold text-lg">${feature.properties.name}</h3>
-                    <p class="my-2">Severity: ${Math.round(feature.properties.severity * 100)}%</p>
-                    <p class="text-xs text-gray-400">Source: ${feature.properties.source}</p>
-                  </div>
-                `);
-              }}
-            />
-          )}
-          
-          {/* Flood data layer */}
-          {activeLayers.flood && (
-            <GeoJSON
-              data={demoFloodData}
-              style={floodStyle}
-              onEachFeature={(feature, layer) => {
-                layer.bindPopup(`
-                  <div class="p-3 bg-gray-800 text-white rounded-lg shadow-lg">
-                    <h3 class="font-bold text-lg">${feature.properties.name}</h3>
-                    <p class="my-2">Severity: ${Math.round(feature.properties.severity * 100)}%</p>
-                    <p class="text-xs text-gray-400">Source: ${feature.properties.source}</p>
-                  </div>
-                `);
-              }}
-            />
-          )}
-          
-          {/* Citizen reports layer */}
-          {activeLayers.reports && (
-            <GeoJSON
-              data={demoCitizenReports}
-              pointToLayer={(feature, latlng) => {
-                return L.marker(latlng, { icon: citizenReportIcon });
-              }}
-              onEachFeature={(feature, layer) => {
-                layer.bindPopup(`
-                  <div class="p-3 bg-gray-800 text-white rounded-lg shadow-lg max-w-xs">
-                    <h3 class="font-bold text-lg">${feature.properties.title}</h3>
-                    <p class="my-2">${feature.properties.description}</p>
-                    <p class="text-sm text-gray-400">Reported by ${feature.properties.user}</p>
-                    <div class="flex justify-between items-center mt-3">
-                      <span class="text-sm text-cyan-400">${feature.properties.votes} votes</span>
-                      <span class="text-xs text-gray-500">${feature.properties.timestamp}</span>
-                    </div>
-                  </div>
-                `);
-                
-                layer.on('click', () => {
-                  handleFeatureClick(feature);
-                });
-              }}
-            />
-          )}
-          
-          {/* Proposals layer */}
-          {activeLayers.proposals && (
-            <GeoJSON
-              data={demoProposals}
-              pointToLayer={(feature, latlng) => {
-                return L.marker(latlng, { icon: proposalIcon });
-              }}
-              onEachFeature={(feature, layer) => {
-                layer.bindPopup(`
-                  <div class="p-3 bg-gray-800 text-white rounded-lg shadow-lg max-w-xs">
-                    <h3 class="font-bold text-lg">${feature.properties.title}</h3>
-                    <p class="my-2">${feature.properties.description}</p>
-                    <div class="flex justify-between items-center mt-3">
-                      <span class="text-sm ${feature.properties.status === 'draft' ? 'text-amber-400' : 'text-green-400'}">
-                        ${feature.properties.status}
-                      </span>
-                      <span class="text-xs text-gray-400">${feature.properties.supportPercentage}% support</span>
-                    </div>
-                  </div>
-                `);
-                
-                layer.on('click', () => {
-                  handleFeatureClick(feature);
-                });
-              }}
-            />
-          )}
-          
-          {/* Ripple effect */}
-          {rippleCenter && <RippleEffect center={rippleCenter} />}
-          
-          {/* Custom zoom control */}
-          <ZoomControl />
-        </MapContainer>
-        
-        {/* Map controls overlay */}
-        <div className="absolute top-4 left-4 z-10 bg-gray-800/90 backdrop-blur-sm rounded-xl p-4 shadow-xl border border-gray-700">
-          <div className="flex items-center justify-between mb-3">
-            <h3 className="font-semibold text-white flex items-center gap-2">
-              <FiLayers className="text-cyan-400" />
-              Data Layers
-            </h3>
-            <button 
-              onClick={() => setShowFilters(!showFilters)}
-              className="p-1.5 rounded-md hover:bg-gray-700 transition-colors"
-            >
-              <FiFilter className="text-gray-400" size={16} />
-            </button>
-          </div>
-          
-          {showFilters && (
-            <div className="space-y-3 mb-4">
-              <div className="flex items-center gap-2">
-                <input
-                  type="text"
-                  placeholder="Search locations..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full bg-gray-700 border border-gray-600 rounded px-3 py-1.5 text-sm text-white focus:ring-cyan-500 focus:border-cyan-500"
-                />
-                <FiSearch className="text-gray-400" />
-              </div>
-              
-              <div className="flex items-center gap-2 mb-2">
-                <FiClock className="text-cyan-400" />
-                <span className="text-sm font-medium">Time Filter</span>
-              </div>
-              <select
-                value={timeFilter}
-                onChange={(e) => setTimeFilter(e.target.value)}
-                className="w-full bg-gray-700 border border-gray-600 rounded px-2 py-1.5 text-sm text-white focus:ring-cyan-500 focus:border-cyan-500"
-              >
-                <option value="24h">Last 24 hours</option>
-                <option value="7d">Last 7 days</option>
-                <option value="30d">Last 30 days</option>
-              </select>
+   <div className="flex h-screen bg-gray-900 text-white overflow-hidden">
+  {/* Left Column - Map (70%) */}
+  <div className="w-7/10 h-full z-10 relative">
+    <MapContainer
+      center={[23.8103, 90.4125]}
+      zoom={12}
+      style={{ height: '100%', width: '100%' }}
+      zoomControl={false}
+    >
+      {/* 3D Terrain Layer */}
+      <TileLayer
+        url="https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png"
+        attribution='Map data: &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+      />
+
+      {/* Dynamic Hazard Layers */}
+      {activeLayers.heat && (
+        <GeoJSON data={demoHeatData} style={heatStyle} onEachFeature={(f, l) =>
+          l.bindPopup(`
+            <div class="p-3 bg-gray-800/90 rounded-xl border border-gray-700 shadow-md">
+              <h3 class="font-bold text-lg text-orange-400">${f.properties.name}</h3>
+              <p class="my-2">Severity: ${Math.round(f.properties.severity * 100)}%</p>
+              <p class="text-xs text-gray-400">Source: ${f.properties.source}</p>
             </div>
-          )}
-          
-          <div className="space-y-2">
-            <label className="flex items-center gap-2 p-2 rounded-md hover:bg-gray-700/50 transition-colors">
-              <input
-                type="checkbox"
-                checked={activeLayers.heat}
-                onChange={() => toggleLayer('heat')}
-                className="w-4 h-4 text-cyan-600 rounded focus:ring-cyan-500 focus:ring-offset-gray-800"
-              />
-              <span className="text-sm">Heat Risk (MODIS LST)</span>
-              {activeLayers.heat ? <FiEye className="text-cyan-400 ml-auto" /> : <FiEyeOff className="text-gray-500 ml-auto" />}
-            </label>
-            <label className="flex items-center gap-2 p-2 rounded-md hover:bg-gray-700/50 transition-colors">
-              <input
-                type="checkbox"
-                checked={activeLayers.flood}
-                onChange={() => toggleLayer('flood')}
-                className="w-4 h-4 text-cyan-600 rounded focus:ring-cyan-500 focus:ring-offset-gray-800"
-              />
-              <span className="text-sm">Flood Risk (GFMS)</span>
-              {activeLayers.flood ? <FiEye className="text-cyan-400 ml-auto" /> : <FiEyeOff className="text-gray-500 ml-auto" />}
-            </label>
-            <label className="flex items-center gap-2 p-2 rounded-md hover:bg-gray-700/50 transition-colors">
-              <input
-                type="checkbox"
-                checked={activeLayers.reports}
-                onChange={() => toggleLayer('reports')}
-                className="w-4 h-4 text-cyan-600 rounded focus:ring-cyan-500 focus:ring-offset-gray-800"
-              />
-              <span className="text-sm">Citizen Reports</span>
-              {activeLayers.reports ? <FiEye className="text-cyan-400 ml-auto" /> : <FiEyeOff className="text-gray-500 ml-auto" />}
-            </label>
-            <label className="flex items-center gap-2 p-2 rounded-md hover:bg-gray-700/50 transition-colors">
-              <input
-                type="checkbox"
-                checked={activeLayers.proposals}
-                onChange={() => toggleLayer('proposals')}
-                className="w-4 h-4 text-cyan-600 rounded focus:ring-cyan-500 focus:ring-offset-gray-800"
-              />
-              <span className="text-sm">Active Proposals</span>
-              {activeLayers.proposals ? <FiEye className="text-cyan-400 ml-auto" /> : <FiEyeOff className="text-gray-500 ml-auto" />}
-            </label>
-          </div>
-        </div>
-        
-        {/* Ripple trigger button for demo */}
-        <button
-          className="absolute bottom-4 right-4 z-10 bg-cyan-600 hover:bg-cyan-700 text-white px-4 py-2.5 rounded-lg shadow-lg transition-all duration-200 hover:shadow-cyan-800/30 flex items-center gap-2"
-          onClick={() => triggerRippleEffect([23.8103, 90.4125], "New city initiative launched!")}
-        >
-          <FiPlus size={18} />
-          Announce Initiative
-        </button>
-      </div>
-      
-      {/* Right Column - Sidebar (30%) */}
-      <div className="w-3/10 h-full bg-gradient-to-b from-gray-800 to-gray-900 border-l border-gray-700 flex flex-col overflow-hidden">
-        {/* Header */}
-        <div className="p-4 border-b border-gray-700 bg-gray-800">
-          <h1 className="text-xl font-bold text-white">Civic Engagement Hub</h1>
-          <p className="text-sm text-gray-400">Connecting NASA data with community action</p>
-        </div>
-        
-        {/* Tabs */}
-        <div className="flex border-b border-gray-700 bg-gray-800">
-          <button className="flex-1 py-3 text-sm font-medium text-cyan-400 border-b-2 border-cyan-400">
-            <FiMessageSquare className="inline mr-2" />
-            Activity Feed
-          </button>
-          <button className="flex-1 py-3 text-sm font-medium text-gray-400 hover:text-gray-300">
-            <FiCheckSquare className="inline mr-2" />
-            Proposals
-          </button>
-        </div>
-        
-        {/* Live Activity Feed */}
-        <div className="flex-1 overflow-y-auto p-4">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="font-semibold text-white flex items-center gap-2">
-              <FiMessageSquare className="text-cyan-400" />
-              Live Activity Feed
-            </h2>
-            <span className="text-xs bg-cyan-600 text-white px-2 py-1 rounded-full">42 NEW</span>
-          </div>
-          
-          <div className="space-y-3">
-            {feedItems.map(item => (
-              <FeedItem 
-                key={item.id} 
-                item={item} 
-                onClick={handleFeedItemClick}
-              />
-            ))}
-          </div>
-        </div>
-        
-        {/* Active Proposals */}
-        <div className="flex-1 overflow-y-auto p-4 border-t border-gray-700 bg-gray-850">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="font-semibold text-white flex items-center gap-2">
-              <FiCheckSquare className="text-amber-400" />
-              Active Proposals
-            </h2>
-            <span className="text-xs bg-amber-600 text-white px-2 py-1 rounded-full">2 ACTIVE</span>
-          </div>
-          
-          <div className="space-y-3">
-            {demoProposals.features.map(proposal => (
-              <ProposalCard 
-                key={proposal.properties.id} 
-                proposal={proposal.properties} 
-                onClick={handleProposalClick}
-              />
-            ))}
-          </div>
-        </div>
-      </div>
-      
-      {/* Conversation Modal */}
-      {showConversation && selectedFeature && (
-        <ConversationBubble 
-          feature={selectedFeature} 
-          onClose={() => setShowConversation(false)}
-        />
+          `)} />
       )}
+
+      {activeLayers.flood && (
+        <GeoJSON data={demoFloodData} style={floodStyle} onEachFeature={(f, l) =>
+          l.bindPopup(`
+            <div class="p-3 bg-gray-800/90 rounded-xl border border-gray-700 shadow-md">
+              <h3 class="font-bold text-lg text-blue-400">${f.properties.name}</h3>
+              <p class="my-2">Severity: ${Math.round(f.properties.severity * 100)}%</p>
+              <p class="text-xs text-gray-400">Source: ${f.properties.source}</p>
+            </div>
+          `)} />
+      )}
+
+      {/* Citizen Reports */}
+      {activeLayers.reports && (
+        <GeoJSON data={demoCitizenReports} pointToLayer={(f, latlng) =>
+          L.marker(latlng, { icon: citizenReportIcon })
+        } onEachFeature={(f, l) => {
+          l.bindPopup(`
+            <div class="p-3 bg-gray-800/95 rounded-xl border border-gray-700 shadow-lg max-w-xs">
+              <h3 class="font-bold text-lg text-cyan-400">${f.properties.title}</h3>
+              <p class="my-2">${f.properties.description}</p>
+              <p class="text-sm text-gray-400">By ${f.properties.user}</p>
+              <div class="flex justify-between mt-3 text-xs">
+                <span class="text-cyan-400">${f.properties.votes} votes</span>
+                <span class="text-gray-500">${f.properties.timestamp}</span>
+              </div>
+            </div>
+          `);
+          l.on("click", () => handleFeatureClick(f));
+        }} />
+      )}
+
+      {/* Proposals */}
+      {activeLayers.proposals && (
+        <GeoJSON data={demoProposals} pointToLayer={(f, latlng) =>
+          L.marker(latlng, { icon: proposalIcon })
+        } onEachFeature={(f, l) => {
+          l.bindPopup(`
+            <div class="p-3 bg-gray-800/95 rounded-xl border border-gray-700 shadow-lg max-w-xs">
+              <h3 class="font-bold text-lg text-amber-400">${f.properties.title}</h3>
+              <p class="my-2">${f.properties.description}</p>
+              <div class="flex justify-between mt-3">
+                <span class="text-sm ${f.properties.status === "draft" ? "text-amber-400" : "text-green-400"}">
+                  ${f.properties.status}
+                </span>
+                <span class="text-xs text-gray-400">${f.properties.supportPercentage}% support</span>
+              </div>
+            </div>
+          `);
+          l.on("click", () => handleFeatureClick(f));
+        }} />
+      )}
+
+      {/* Ripple Effect */}
+      {rippleCenter && <RippleEffect center={rippleCenter} />}
+      <ZoomControl />
+    </MapContainer>
+
+    {/* Map Controls Overlay */}
+    {/* Map controls overlay (always above map) */}
+<div className="absolute top-4 left-4 z-[9999] bg-gray-800/90 backdrop-blur-md rounded-xl p-5 shadow-xl border border-gray-700 w-64">
+  <div className="flex items-center justify-between mb-3">
+    <h3 className="font-semibold text-white flex items-center gap-2">
+      <FiLayers className="text-cyan-400" />
+      Data Layers
+    </h3>
+    <button 
+      onClick={() => setShowFilters(!showFilters)} 
+      className="p-1.5 rounded-md hover:bg-gray-700 transition-colors"
+    >
+      <FiFilter className="text-gray-400" size={16} />
+    </button>
+  </div>
+
+  {showFilters && (
+    <div className="space-y-3 mb-4">
+      <div className="flex items-center gap-2">
+        <input
+          type="text"
+          placeholder="Search locations..."
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          className="w-full bg-gray-700 border border-gray-600 rounded px-3 py-1.5 text-sm text-white focus:ring-cyan-500 focus:border-cyan-500"
+        />
+        <FiSearch className="text-gray-400" />
+      </div>
+
+      <div className="flex items-center gap-2 mb-2">
+        <FiClock className="text-cyan-400" />
+        <span className="text-sm font-medium">Time Filter</span>
+      </div>
+      <select
+        value={timeFilter}
+        onChange={(e) => setTimeFilter(e.target.value)}
+        className="w-full bg-gray-700 border border-gray-600 rounded px-2 py-1.5 text-sm text-white focus:ring-cyan-500 focus:border-cyan-500"
+      >
+        <option value="24h">Last 24 hours</option>
+        <option value="7d">Last 7 days</option>
+        <option value="30d">Last 30 days</option>
+      </select>
     </div>
+  )}
+
+  {/* Layer toggles */}
+  <div className="space-y-2">
+    {[
+      { key: "heat", label: "Heat Risk (MODIS LST)" },
+      { key: "flood", label: "Flood Risk (GFMS)" },
+      { key: "reports", label: "Citizen Reports" },
+      { key: "proposals", label: "Active Proposals" }
+    ].map(layer => (
+      <label 
+        key={layer.key} 
+        className="flex items-center gap-2 p-2 rounded-md hover:bg-gray-700/50 transition-colors"
+      >
+        <input
+          type="checkbox"
+          checked={activeLayers[layer.key]}
+          onChange={() => toggleLayer(layer.key)}
+          className="w-4 h-4 text-cyan-600 rounded focus:ring-cyan-500"
+        />
+        <span className="text-sm">{layer.label}</span>
+        {activeLayers[layer.key] ? (
+          <FiEye className="text-cyan-400 ml-auto" />
+        ) : (
+          <FiEyeOff className="text-gray-500 ml-auto" />
+        )}
+      </label>
+    ))}
+  </div>
+</div>
+
+
+    {/* Ripple trigger button */}
+    {/* Ripple Trigger Button */}
+<motion.button
+  initial={{ opacity: 0, scale: 0.9, y: 20 }}
+  animate={{ opacity: 1, scale: 1, y: 0 }}
+  whileTap={{ scale: 0.92 }}
+  whileHover={{ scale: 1.05 }}
+  transition={{ type: "spring", stiffness: 300, damping: 20 }}
+  className="absolute bottom-6 right-6 z-[2000] 
+             bg-gradient-to-r from-cyan-500 to-blue-600 
+             hover:from-cyan-600 hover:to-blue-700
+             text-white font-semibold tracking-wide
+             px-5 py-3 rounded-2xl shadow-lg
+             flex items-center gap-2"
+  onClick={() => triggerRippleEffect([23.8103, 90.4125], "New city initiative launched!")}
+>
+  {/* Glow Pulse Effect */}
+  <span className="absolute inset-0 rounded-2xl bg-cyan-400/30 blur-lg animate-pulse -z-10"></span>
+
+  {/* Icon Animation */}
+  <motion.div
+    animate={{ rotate: [0, 90, 0] }}
+    transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
+  >
+    <FiPlus size={20} />
+  </motion.div>
+
+  <span>Announce Initiative</span>
+</motion.button>
+
+
+  </div>
+
+  {/* Right Column - Sidebar (30%) */}
+  <div className="w-3/10 h-full bg-gradient-to-b from-gray-800 to-gray-900 border-l border-gray-700 flex flex-col overflow-hidden">
+    {/* Header */}
+    <div className="p-4 border-b border-gray-700 bg-gray-800">
+      <h1 className="text-xl font-bold text-white">Civic Engagement Hub</h1>
+      <p className="text-sm text-gray-400">Connecting NASA data with community action</p>
+    </div>
+
+    {/* Tabs */}
+    <div className="flex border-b border-gray-700 bg-gray-800">
+      <button className="flex-1 py-3 text-sm font-medium text-cyan-400 border-b-2 border-cyan-400">
+        <FiMessageSquare className="inline mr-2" />
+        Activity Feed
+      </button>
+      <button className="flex-1 py-3 text-sm font-medium text-gray-400 hover:text-gray-300">
+        <FiCheckSquare className="inline mr-2" />
+        Proposals
+      </button>
+    </div>
+
+    {/* Live Activity Feed */}
+    <div className="flex-1 overflow-y-auto p-4 scrollbar-thin scrollbar-thumb-gray-600 scrollbar-track-gray-800">
+      <div className="flex items-center justify-between mb-4">
+        <h2 className="font-semibold text-white flex items-center gap-2">
+          <FiMessageSquare className="text-cyan-400" />
+          Live Activity Feed
+        </h2>
+        <span className="text-xs bg-cyan-600 px-2 py-1 rounded-full">42 NEW</span>
+      </div>
+      <div className="space-y-3">
+        {feedItems.map(item => (
+          <FeedItem key={item.id} item={item} onClick={handleFeedItemClick} />
+        ))}
+      </div>
+    </div>
+
+    {/* Active Proposals */}
+    <div className="flex-1 overflow-y-auto p-4 border-t border-gray-700 bg-gray-850 scrollbar-thin scrollbar-thumb-gray-600 scrollbar-track-gray-800">
+      <div className="flex items-center justify-between mb-4">
+        <h2 className="font-semibold text-white flex items-center gap-2">
+          <FiCheckSquare className="text-amber-400" />
+          Active Proposals
+        </h2>
+        <span className="text-xs bg-amber-600 px-2 py-1 rounded-full">2 ACTIVE</span>
+      </div>
+      <div className="space-y-3">
+        {demoProposals.features.map(p => (
+          <ProposalCard key={p.properties.id} proposal={p.properties} onClick={handleProposalClick} />
+        ))}
+      </div>
+    </div>
+  </div>
+
+  {/* Conversation Modal */}
+  {showConversation && selectedFeature && (
+    <ConversationBubble feature={selectedFeature} onClose={() => setShowConversation(false)} />
+  )}
+</div>
+
   );
 };
 

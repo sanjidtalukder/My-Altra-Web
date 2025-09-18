@@ -66,6 +66,7 @@ const Vision = () => {
         { name: "SRTM", description: "Topographic elevation data", icon: "⛰️" },
         { name: "IMERG", description: "Global precipitation measurement", icon: "🌧️" }
       ],
+      data: "Global satellite network integration complete",
       visualization: "planetary"
     }
   ];
@@ -420,22 +421,26 @@ const Vision = () => {
                   )}
                   
                   {/* Alert */}
-                  {phase.alert && (
+                  {phase.alert && !Array.isArray(phase.alert) && (
                     <div className="mt-6 p-4 bg-amber-900/30 rounded-lg">
                       <div className="text-amber-300 font-semibold mb-2">{phase.alert.title}</div>
                       <div className="text-amber-200 text-sm">{phase.alert.message}</div>
                     </div>
                   )}
                   
-                  {/* Missions */}
+                  {/* Missions (for Planetary System phase) */}
                   {phase.missions && (
-                    <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mt-6">
-                      {phase.missions.map((mission, i) => (
-                        <div key={i} className="bg-gray-800/50 p-3 rounded-lg text-center">
-                          <div className="text-cyan-400 font-semibold text-sm">{mission.name}</div>
-                          <div className="text-gray-300 text-xs">{mission.description}</div>
-                        </div>
-                      ))}
+                    <div className="mt-6">
+                      <h3 className="text-xl font-bold text-white text-center mb-4">Satellite Network</h3>
+                      <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                        {phase.missions.map((mission, i) => (
+                          <div key={i} className="bg-gray-800/50 p-4 rounded-lg text-center">
+                            <div className="text-2xl mb-2">{mission.icon}</div>
+                            <h3 className="text-white font-semibold mb-1">{mission.name}</h3>
+                            <p className="text-gray-300 text-sm">{mission.description}</p>
+                          </div>
+                        ))}
+                      </div>
                     </div>
                   )}
                   

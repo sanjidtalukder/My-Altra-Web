@@ -371,7 +371,7 @@ const New = () => {
         </div>
         
         {/* Main map area */}
-        <div className="flex-1 h-screen w-screen relative">
+        <div className="flex-1 h-screen z-10 w-screen relative">
           <MapContainer
             center={[23.8103, 90.4125]}
     zoom={11}

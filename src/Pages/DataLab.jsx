@@ -470,7 +470,7 @@ const DataLab = () => {
   };
 
   return (
-    <div className="relative w-full h-screen bg-gray-900">
+    <div className="relative w-full z-10 h-screen bg-gray-900">
       {/* Add style tag for custom CSS */}
       <style>{styles}</style>
       

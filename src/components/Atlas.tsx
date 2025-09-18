@@ -386,188 +386,204 @@ const Atlas: React.FC = () => {
       />
       
       {/* UI Controls */}
-      <div className="absolute top-4 right-4 z-[1000] flex flex-col gap-3">
-        {/* Equity Lens Toggle */}
-        <motion.button
-          initial={{ opacity: 0, x: 20 }}
-          animate={{ opacity: 1, x: 0 }}
-          className={`btn ${equityLensActive ? 'btn-primary' : ''} command-panel rounded-full shadow-lg pulse-glow`}
-          onClick={() => setEquityLensActive(!equityLensActive)}
-        >
-          <FiEye className="mr-2" />
-          {equityLensActive ? 'Map View' : 'Equity Lens'}
-        </motion.button>
-        
-        {/* Time Travel Slider */}
-        <motion.div 
-          initial={{ opacity: 0, x: 20 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ delay: 0.1 }}
-          className="command-panel rounded-lg p-4 w-64"
-        >
-          <div className="flex items-center mb-2 text-primary">
-            <FiClock className="mr-2" />
-            <span className="font-bold">Time Travel</span>
-          </div>
-          <div className="flex justify-between text-xs mb-1 text-muted-foreground">
-            <span>Past</span>
-            <span>Present</span>
-            <span>Future</span>
-          </div>
-          <input
-            type="range"
-            min="0"
-            max="2"
-            value={['past', 'present', 'future'].indexOf(timePeriod)}
-            onChange={(e) => setTimePeriod(['past', 'present', 'future'][parseInt(e.target.value)])}
-            className="w-full h-2 bg-muted rounded-lg appearance-none cursor-pointer slider"
-          />
-        </motion.div>
-        
-        {/* Layer Controls */}
-        <motion.div 
-          initial={{ opacity: 0, x: 20 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ delay: 0.2 }}
-          className="command-panel rounded-lg p-4 w-64"
-        >
-          <div className="flex items-center mb-2 text-primary">
-            <FiLayers className="mr-2" />
-            <span className="font-bold">Layers</span>
-          </div>
-          <div className="flex flex-col gap-2">
-            <label className="cursor-pointer flex items-center">
-              <input
-                type="checkbox"
-                checked={visibleLayers.heat}
-                onChange={() => toggleLayer('heat')}
-                className="mr-2 accent-primary"
-              />
-              <FiAlertTriangle className="text-orange-500 mr-1" />
-              <span className="text-sm">Heat Hazards</span>
-            </label>
-            <label className="cursor-pointer flex items-center">
-              <input
-                type="checkbox"
-                checked={visibleLayers.flood}
-                onChange={() => toggleLayer('flood')}
-                className="mr-2 accent-primary"
-              />
-              <FiAlertTriangle className="text-blue-500 mr-1" />
-              <span className="text-sm">Flood Hazards</span>
-            </label>
-            <label className="cursor-pointer flex items-center">
-              <input
-                type="checkbox"
-                checked={visibleLayers.fire}
-                onChange={() => toggleLayer('fire')}
-                className="mr-2 accent-primary"
-              />
-              <FiAlertTriangle className="text-red-500 mr-1" />
-              <span className="text-sm">Fire Hazards</span>
-            </label>
-            <label className="cursor-pointer flex items-center">
-              <input
-                type="checkbox"
-                checked={visibleLayers.air}
-                onChange={() => toggleLayer('air')}
-                className="mr-2 accent-primary"
-              />
-              <FiAlertTriangle className="text-gray-400 mr-1" />
-              <span className="text-sm">Air Hazards</span>
-            </label>
-            <label className="cursor-pointer flex items-center">
-              <input
-                type="checkbox"
-                checked={visibleLayers.communities}
-                onChange={() => toggleLayer('communities')}
-                className="mr-2 accent-primary"
-              />
-              <FiHome className="text-green-500 mr-1" />
-              <span className="text-sm">Communities</span>
-            </label>
-            <label className="cursor-pointer flex items-center">
-              <input
-                type="checkbox"
-                checked={visibleLayers.connections}
-                onChange={() => toggleLayer('connections')}
-                className="mr-2 accent-primary"
-              />
-              <FiGlobe className="text-purple-500 mr-1" />
-              <span className="text-sm">Connections</span>
-            </label>
-          </div>
-        </motion.div>
+<div className="absolute top-4 right-4 z-20 flex flex-col gap-4">
+  {/* Equity Lens Toggle */}
+  <motion.button
+    initial={{ opacity: 0, x: 20 }}
+    animate={{ opacity: 1, x: 0 }}
+    className={`rounded-full shadow-lg px-5 py-2 flex items-center gap-2 transition-all duration-300 ${
+      equityLensActive 
+        ? 'bg-indigo-600 text-white ring-2 ring-indigo-300 hover:bg-indigo-700' 
+        : 'bg-white/10 text-white border border-white/20 backdrop-blur-md hover:bg-white/20'
+    }`}
+    onClick={() => setEquityLensActive(!equityLensActive)}
+  >
+    <FiEye className="mr-1" />
+    {equityLensActive ? 'Map View' : 'Equity Lens'}
+  </motion.button>
 
-        {/* Simulation Controls */}
-        {equityLensActive && (
-          <motion.div 
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: 0.3 }}
-            className="command-panel rounded-lg p-4 w-64"
-          >
-            <div className="flex items-center mb-2 text-primary">
-              <FiPlay className="mr-2" />
-              <span className="font-bold">Simulation</span>
-            </div>
-            <div className="flex items-center justify-between mb-2">
-              <button 
-                className={`btn ${isPlaying ? 'btn-primary' : ''} btn-sm flex items-center gap-2`}
-                onClick={togglePlayPause}
-              >
-                {isPlaying ? <FiPause /> : <FiPlay />}
-                {isPlaying ? 'Pause' : 'Play'}
-              </button>
-              <div className="flex gap-1">
-                {[0.5, 1, 2].map(speed => (
-                  <button
-                    key={speed}
-                    className={`btn btn-sm ${simulationSpeed === speed ? 'btn-primary' : ''}`}
-                    onClick={() => setSimulationSpeed(speed)}
-                  >
-                    {speed}x
-                  </button>
-                ))}
-              </div>
-            </div>
-          </motion.div>
-        )}
+  {/* Time Travel Slider */}
+  <motion.div 
+    initial={{ opacity: 0, x: 20 }}
+    animate={{ opacity: 1, x: 0 }}
+    transition={{ delay: 0.1 }}
+    className="rounded-2xl p-4 w-64 bg-white/10 backdrop-blur-xl border border-white/20 shadow-xl"
+  >
+    <div className="flex items-center mb-2 text-indigo-300">
+      <FiClock className="mr-2" />
+      <span className="font-bold">Time Travel</span>
+    </div>
+    <div className="flex justify-between text-xs mb-2 text-white/70">
+      <span>Past</span>
+      <span>Present</span>
+      <span>Future</span>
+    </div>
+    <input
+      type="range"
+      min="0"
+      max="2"
+      value={['past', 'present', 'future'].indexOf(timePeriod)}
+      onChange={(e) => setTimePeriod(['past', 'present', 'future'][parseInt(e.target.value)])}
+      className="w-full h-2 bg-indigo-500/30 rounded-lg appearance-none cursor-pointer accent-indigo-500"
+    />
+  </motion.div>
+
+  {/* Layer Controls */}
+  <motion.div 
+    initial={{ opacity: 0, x: 20 }}
+    animate={{ opacity: 1, x: 0 }}
+    transition={{ delay: 0.2 }}
+    className="rounded-2xl p-4 w-64 bg-white/10 backdrop-blur-xl border border-white/20 shadow-xl"
+  >
+    <div className="flex items-center mb-2 text-indigo-300">
+      <FiLayers className="mr-2" />
+      <span className="font-bold">Layers</span>
+    </div>
+    <div className="flex flex-col gap-2 text-white/90">
+      <label className="cursor-pointer flex items-center hover:text-indigo-200 transition">
+        <input
+          type="checkbox"
+          checked={visibleLayers.heat}
+          onChange={() => toggleLayer('heat')}
+          className="mr-2 accent-indigo-400"
+        />
+        <FiAlertTriangle className="text-orange-400 mr-1" />
+        <span className="text-sm">Heat Hazards</span>
+      </label>
+      <label className="cursor-pointer flex items-center hover:text-indigo-200 transition">
+        <input
+          type="checkbox"
+          checked={visibleLayers.flood}
+          onChange={() => toggleLayer('flood')}
+          className="mr-2 accent-indigo-400"
+        />
+        <FiAlertTriangle className="text-blue-400 mr-1" />
+        <span className="text-sm">Flood Hazards</span>
+      </label>
+      <label className="cursor-pointer flex items-center hover:text-indigo-200 transition">
+        <input
+          type="checkbox"
+          checked={visibleLayers.fire}
+          onChange={() => toggleLayer('fire')}
+          className="mr-2 accent-indigo-400"
+        />
+        <FiAlertTriangle className="text-red-400 mr-1" />
+        <span className="text-sm">Fire Hazards</span>
+      </label>
+      <label className="cursor-pointer flex items-center hover:text-indigo-200 transition">
+        <input
+          type="checkbox"
+          checked={visibleLayers.air}
+          onChange={() => toggleLayer('air')}
+          className="mr-2 accent-indigo-400"
+        />
+        <FiAlertTriangle className="text-gray-400 mr-1" />
+        <span className="text-sm">Air Hazards</span>
+      </label>
+      <label className="cursor-pointer flex items-center hover:text-indigo-200 transition">
+        <input
+          type="checkbox"
+          checked={visibleLayers.communities}
+          onChange={() => toggleLayer('communities')}
+          className="mr-2 accent-indigo-400"
+        />
+        <FiHome className="text-green-400 mr-1" />
+        <span className="text-sm">Communities</span>
+      </label>
+      <label className="cursor-pointer flex items-center hover:text-indigo-200 transition">
+        <input
+          type="checkbox"
+          checked={visibleLayers.connections}
+          onChange={() => toggleLayer('connections')}
+          className="mr-2 accent-indigo-400"
+        />
+        <FiGlobe className="text-purple-400 mr-1" />
+        <span className="text-sm">Connections</span>
+      </label>
+    </div>
+  </motion.div>
+
+  {/* Simulation Controls */}
+  {equityLensActive && (
+    <motion.div 
+      initial={{ opacity: 0, x: 20 }}
+      animate={{ opacity: 1, x: 0 }}
+      transition={{ delay: 0.3 }}
+      className="rounded-2xl p-4 w-64 bg-white/10 backdrop-blur-xl border border-white/20 shadow-xl"
+    >
+      <div className="flex items-center mb-2 text-indigo-300">
+        <FiPlay className="mr-2" />
+        <span className="font-bold">Simulation</span>
       </div>
+      <div className="flex items-center justify-between mb-2">
+        <button 
+          className={`px-3 py-1 rounded-lg flex items-center gap-2 transition ${
+            isPlaying 
+              ? 'bg-indigo-600 text-white shadow-md' 
+              : 'bg-white/10 text-white hover:bg-white/20'
+          }`}
+          onClick={togglePlayPause}
+        >
+          {isPlaying ? <FiPause /> : <FiPlay />}
+          {isPlaying ? 'Pause' : 'Play'}
+        </button>
+        <div className="flex gap-2">
+          {[0.5, 1, 2].map(speed => (
+            <button
+              key={speed}
+              className={`px-2 py-1 rounded-md transition ${
+                simulationSpeed === speed
+                  ? 'bg-indigo-600 text-white shadow-md'
+                  : 'bg-white/10 text-white hover:bg-white/20'
+              }`}
+              onClick={() => setSimulationSpeed(speed)}
+            >
+              {speed}x
+            </button>
+          ))}
+        </div>
+      </div>
+    </motion.div>
+  )}
+</div>
+
       
-      {/* Legend */}
-      <motion.div 
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="absolute bottom-4 left-4 z-[1000] command-panel rounded-lg p-4 w-56"
-      >
-        <div className="flex items-center mb-2 text-primary">
-          <FiGlobe className="mr-2" />
-          <span className="font-bold">Legend</span>
-        </div>
-        <div className="space-y-2">
-          <div className="flex items-center">
-            <div className="w-4 h-4 rounded-full bg-orange-500 mr-2"></div>
-            <span className="text-sm">Heat Hazard</span>
-          </div>
-          <div className="flex items-center">
-            <div className="w-4 h-4 rounded-full bg-blue-500 mr-2"></div>
-            <span className="text-sm">Flood Hazard</span>
-          </div>
-          <div className="flex items-center">
-            <div className="w-4 h-4 rounded-full bg-red-500 mr-2"></div>
-            <span className="text-sm">Fire Hazard</span>
-          </div>
-          <div className="flex items-center">
-            <div className="w-4 h-4 rounded-full bg-gray-400 mr-2"></div>
-            <span className="text-sm">Air Hazard</span>
-          </div>
-          <div className="flex items-center">
-            <div className="w-4 h-4 rounded-full bg-gradient-to-r from-green-500 to-red-500 mr-2"></div>
-            <span className="text-sm">Community Vulnerability</span>
-          </div>
-        </div>
-      </motion.div>
+     {/* Legend */}
+<motion.div 
+  initial={{ opacity: 0, y: 20 }}
+  animate={{ opacity: 1, y: 0 }}
+  transition={{ duration: 0.4 }}
+  className="absolute bottom-4 left-4 z-[1000] rounded-2xl p-5 w-60 bg-white/10 backdrop-blur-xl border border-white/20 shadow-xl"
+>
+  <div className="flex items-center mb-3 text-indigo-300">
+    <FiGlobe className="mr-2" />
+    <span className="font-bold tracking-wide">Legend</span>
+  </div>
+
+  <div className="space-y-3 text-white/90">
+    <div className="flex items-center">
+      <div className="w-4 h-4 rounded-full bg-orange-500 shadow-md shadow-orange-500/60 mr-2"></div>
+      <span className="text-sm">Heat Hazard</span>
+    </div>
+    <div className="flex items-center">
+      <div className="w-4 h-4 rounded-full bg-blue-500 shadow-md shadow-blue-500/60 mr-2"></div>
+      <span className="text-sm">Flood Hazard</span>
+    </div>
+    <div className="flex items-center">
+      <div className="w-4 h-4 rounded-full bg-red-500 shadow-md shadow-red-500/60 mr-2"></div>
+      <span className="text-sm">Fire Hazard</span>
+    </div>
+    <div className="flex items-center">
+      <div className="w-4 h-4 rounded-full bg-gray-400 shadow-md shadow-gray-400/50 mr-2"></div>
+      <span className="text-sm">Air Hazard</span>
+    </div>
+    <div className="flex items-center">
+      <div className="w-4 h-4 rounded-full bg-gradient-to-r from-green-500 to-red-500 shadow-md shadow-green-500/40 mr-2"></div>
+      <span className="text-sm">Community Vulnerability</span>
+    </div>
+  </div>
+</motion.div>
+
 
       {/* Info Panel */}
       {selectedNode && (
@@ -604,34 +620,38 @@ const Atlas: React.FC = () => {
       )}
 
       {/* Tutorial Overlay */}
-      {showTutorial && (
-        <motion.div 
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          className="absolute inset-0 z-[2000] bg-black/70 flex items-center justify-center"
-        >
-          <motion.div 
-            initial={{ opacity: 0, scale: 0.8 }}
-            animate={{ opacity: 1, scale: 1 }}
-            className="command-panel rounded-lg p-6 w-96 max-w-[90vw]"
-          >
-            <h2 className="text-xl font-bold mb-4 text-primary holo-text">Welcome to Atlas</h2>
-            <div className="space-y-3 mb-6">
-              <p className="text-sm">This interactive visualization shows environmental hazards and their impact on vulnerable communities.</p>
-              <p className="text-sm">• Use the <strong className="text-accent">Equity Lens</strong> to see network connections</p>
-              <p className="text-sm">• Toggle different <strong className="text-accent">layers</strong> to focus on specific data</p>
-              <p className="text-sm">• Use the <strong className="text-accent">time slider</strong> to explore scenarios</p>
-              <p className="text-sm">• Click elements for detailed information</p>
-            </div>
-            <button 
-              className="btn btn-primary w-full"
-              onClick={() => setShowTutorial(false)}
-            >
-              Get Started
-            </button>
-          </motion.div>
-        </motion.div>
-      )}
+{showTutorial && (
+  <motion.div 
+    initial={{ opacity: 0 }}
+    animate={{ opacity: 1 }}
+    className="absolute inset-0 z-20 bg-gradient-to-br from-black/70 via-black/60 to-black/70 backdrop-blur-sm flex items-center justify-center"
+  >
+    <motion.div 
+      initial={{ opacity: 0, scale: 0.85 }}
+      animate={{ opacity: 1, scale: 1 }}
+      transition={{ duration: 0.4 }}
+      className="rounded-2xl p-8 w-96 max-w-[90vw] bg-white/10 border border-white/20 shadow-2xl backdrop-blur-xl"
+    >
+      <h2 className="text-2xl font-bold mb-5 text-center text-indigo-300 tracking-wide drop-shadow-lg">
+        Welcome to Atlas
+      </h2>
+      <div className="space-y-3 mb-6 text-white/90">
+        <p className="text-sm">This interactive visualization shows environmental hazards and their impact on vulnerable communities.</p>
+        <p className="text-sm">• Use the <strong className="text-indigo-300">Equity Lens</strong> to see network connections</p>
+        <p className="text-sm">• Toggle different <strong className="text-indigo-300">layers</strong> to focus on specific data</p>
+        <p className="text-sm">• Use the <strong className="text-indigo-300">time slider</strong> to explore scenarios</p>
+        <p className="text-sm">• Click elements for detailed information</p>
+      </div>
+      <button 
+        className="btn w-full bg-indigo-500 hover:bg-indigo-600 text-white font-semibold rounded-xl shadow-md transition"
+        onClick={() => setShowTutorial(false)}
+      >
+        Get Started
+      </button>
+    </motion.div>
+  </motion.div>
+)}
+
 
       {/* Help Button */}
       <motion.button
