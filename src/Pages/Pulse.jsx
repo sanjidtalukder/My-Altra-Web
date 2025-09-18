@@ -1,326 +1,549 @@
-import React, { useEffect, useState } from "react";
-import {
-  MapContainer,
-  TileLayer,
-  Marker,
-  Popup,
-  Circle,
-} from "react-leaflet";
-import "leaflet/dist/leaflet.css";
-import L from "leaflet";
+import React, { useEffect, useRef, useState } from 'react';
+import * as THREE from 'three';
+import UrbanMonitoringMap from './UrbanMonitoringMap';
 
-// Fix for default markers
-delete L.Icon.Default.prototype._getIconUrl;
-L.Icon.Default.mergeOptions({
-  iconRetinaUrl:
-    "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png",
-  iconUrl:
-    "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png",
-  shadowUrl:
-    "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png",
-});
+const Pulse = () => {
+  const containerRef = useRef(null);
+  const [cwi, setCwi] = useState(72);
+  const [pulseRate, setPulseRate] = useState(68);
+  const [activeTab, setActiveTab] = useState('overview');
+  const [activeHazard, setActiveHazard] = useState(null);
+  const [timeOfDay, setTimeOfDay] = useState('day');
+  const [showIntervention, setShowIntervention] = useState(false);
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 1024);
 
-// Custom icons
-const hazardIcons = {
-  heat: new L.Icon({
-    iconUrl:
-      "https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-red.png",
-    shadowUrl:
-      "https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png",
-    iconSize: [25, 41],
-    iconAnchor: [12, 41],
-  }),
-  flood: new L.Icon({
-    iconUrl:
-      "https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-blue.png",
-    shadowUrl:
-      "https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png",
-    iconSize: [25, 41],
-    iconAnchor: [12, 41],
-  }),
-  air: new L.Icon({
-    iconUrl:
-      "https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-green.png",
-    shadowUrl:
-      "https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png",
-    iconSize: [25, 41],
-    iconAnchor: [12, 41],
-  }),
-};
-
-function Pulse() {
-  const [cwi, setCwi] = useState(65);
-  const [hazards, setHazards] = useState([]);
-  const [selectedHazard, setSelectedHazard] = useState(null);
-  const [timeOfDay, setTimeOfDay] = useState("day");
-  const [activeFilters, setActiveFilters] = useState(["heat", "flood", "air"]);
-  const [isPanelCollapsed, setIsPanelCollapsed] = useState(false);
-
+  // Handle window resize
   useEffect(() => {
-    const simulateHazards = [
-      {
-        id: "heat-island-1",
-        type: "heat",
-        severity: 0.87,
-        name: "Industrial District Heat Island",
-        description:
-          "Urban heat island effect causing temperatures 5°C higher than surrounding areas",
-        impact: "Increased energy consumption, heat-related illnesses",
-        trend: "rising",
-        lastUpdated: "2 hours ago",
-        position: [40.715, -74.008],
-        recommendations: [
-          "Avoid outdoor activities during peak hours",
-          "Stay hydrated",
-          "Use cooling centers",
-        ],
-      },
-      {
-        id: "flood-zone-1",
-        type: "flood",
-        severity: 0.65,
-        name: "Riverbend Flood Zone",
-        description: "Increased flood risk due to changing precipitation patterns",
-        impact: "Property damage, infrastructure disruption",
-        trend: "stable",
-        lastUpdated: "5 hours ago",
-        position: [40.708, -74.0],
-        recommendations: [
-          "Avoid low-lying areas",
-          "Prepare emergency evacuation kit",
-          "Monitor local alerts",
-        ],
-      },
-      {
-        id: "air-quality-1",
-        type: "air",
-        severity: 0.72,
-        name: "Northside Air Quality Alert",
-        description: "Particulate matter levels exceeding safety thresholds",
-        impact: "Respiratory issues, reduced outdoor activity",
-        trend: "rising",
-        lastUpdated: "1 hour ago",
-        position: [40.725, -74.015],
-        recommendations: [
-          "Limit outdoor exertion",
-          "Keep windows closed",
-          "Use air purifiers if available",
-        ],
-      },
-    ];
-    setHazards(simulateHazards);
-
-    const interval = setInterval(() => {
-      setCwi((prev) => {
-        const newCwi = Math.max(
-          30,
-          Math.min(95, prev + (Math.random() * 10 - 5))
-        );
-        return Math.round(newCwi);
-      });
-    }, 8000);
-
-    const hour = new Date().getHours();
-    setTimeOfDay(hour >= 6 && hour < 18 ? "day" : "night");
-
-    return () => clearInterval(interval);
+    const handleResize = () => {
+      setIsMobile(window.innerWidth < 1024);
+    };
+    
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  const cwiColor =
-    cwi > 75 ? "bg-green-500" : cwi > 50 ? "bg-yellow-500" : "bg-red-500";
-  const cwiTextColor =
-    cwi > 75 ? "text-green-500" : cwi > 50 ? "text-yellow-500" : "text-red-500";
-  const cwiStatus = cwi > 75 ? "Good" : cwi > 50 ? "Moderate" : "Concerning";
+  // Simulate day/night cycle
+  useEffect(() => {
+    const hour = new Date().getHours();
+    setTimeOfDay(hour > 6 && hour < 20 ? 'day' : 'night');
+  }, []);
 
-  const getTrendIcon = (trend) => {
-    if (trend === "rising") return "↗️";
-    if (trend === "falling") return "↘️";
-    return "→";
+  // Initialize Three.js scene
+  useEffect(() => {
+    if (!containerRef.current) return;
+
+    const scene = new THREE.Scene();
+    const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+    
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.setClearColor(0x000000, 0);
+    containerRef.current.appendChild(renderer.domElement);
+    
+    // Lighting based on time of day
+    const ambientLight = new THREE.AmbientLight(timeOfDay === 'day' ? 0x444444 : 0x222244);
+    scene.add(ambientLight);
+    
+    const directionalLight = new THREE.DirectionalLight(timeOfDay === 'day' ? 0x3366ff : 0x4466aa, 0.5);
+    directionalLight.position.set(1, 1, 1);
+    scene.add(directionalLight);
+    
+    // Create network nodes
+    const nodes = [];
+    const nodeGeometry = new THREE.SphereGeometry(0.05, 16, 16);
+    
+    for (let i = 0; i < 150; i++) {
+      const isHazard = Math.random() > 0.9;
+      const color = isHazard ? 0xff3366 : (Math.random() > 0.7 ? 0x33ff66 : 0x3366ff);
+      
+      const material = new THREE.MeshBasicMaterial({ 
+        color,
+        emissive: isHazard ? 0xff3366 : 0x000000,
+        emissiveIntensity: isHazard ? 0.5 : 0
+      });
+      
+      const node = new THREE.Mesh(nodeGeometry, material);
+      node.position.x = (Math.random() - 0.5) * 12;
+      node.position.y = (Math.random() - 0.5) * 8;
+      node.position.z = (Math.random() - 0.5) * 3;
+      
+      // Add random movement to nodes
+      node.userData = {
+        speed: 0.001 + Math.random() * 0.005,
+        direction: new THREE.Vector3(
+          Math.random() - 0.5,
+          Math.random() - 0.5,
+          Math.random() - 0.5
+        ).normalize()
+      };
+      
+      scene.add(node);
+      nodes.push(node);
+    }
+    
+    // Create connections between nodes
+    const edges = [];
+    
+    for (let i = 0; i < nodes.length; i++) {
+      for (let j = i + 1; j < nodes.length; j++) {
+        if (Math.random() > 0.95) {
+          const distance = nodes[i].position.distanceTo(nodes[j].position);
+          if (distance < 5) {
+            const edgeGeometry = new THREE.BufferGeometry().setFromPoints([
+              new THREE.Vector3(
+                nodes[i].position.x, 
+                nodes[i].position.y, 
+                nodes[i].position.z
+              ),
+              new THREE.Vector3(
+                nodes[j].position.x, 
+                nodes[j].position.y, 
+                nodes[j].position.z
+              )
+            ]);
+            
+            const isHazardConnection = nodes[i].material.emissiveIntensity > 0 || 
+                                      nodes[j].material.emissiveIntensity > 0;
+            
+            const edgeMaterial = new THREE.LineBasicMaterial({ 
+              color: isHazardConnection ? 0xff3366 : 0x3366ff,
+              transparent: true,
+              opacity: isHazardConnection ? 0.6 : 0.2
+            });
+            
+            const line = new THREE.Line(edgeGeometry, edgeMaterial);
+            scene.add(line);
+            edges.push({line, node1: nodes[i], node2: nodes[j]});
+          }
+        }
+      }
+    }
+    
+    // Add pulsing spheres for hazards
+    const pulseSpheres = [];
+    nodes.forEach(node => {
+      if (node.material.emissiveIntensity > 0) {
+        const sphereGeometry = new THREE.SphereGeometry(0.15, 16, 16);
+        const sphereMaterial = new THREE.MeshBasicMaterial({
+          color: 0xff3366,
+          transparent: true,
+          opacity: 0.3,
+          wireframe: true
+        });
+        
+        const pulseSphere = new THREE.Mesh(sphereGeometry, sphereMaterial);
+        pulseSphere.position.copy(node.position);
+        scene.add(pulseSphere);
+        pulseSpheres.push(pulseSphere);
+      }
+    });
+    
+    // Position camera
+    camera.position.z = 7;
+    
+    // Animation function
+    const animate = () => {
+      requestAnimationFrame(animate);
+      
+      // Animate nodes
+      nodes.forEach(node => {
+        // Move nodes slightly
+        node.position.x += node.userData.direction.x * node.userData.speed;
+        node.position.y += node.userData.direction.y * node.userData.speed;
+        node.position.z += node.userData.direction.z * node.userData.speed;
+        
+        // Bounce off imaginary walls
+        if (Math.abs(node.position.x) > 6) node.userData.direction.x *= -1;
+        if (Math.abs(node.position.y) > 4) node.userData.direction.y *= -1;
+        if (Math.abs(node.position.z) > 1.5) node.userData.direction.z *= -1;
+        
+        // Pulse effect based on CWI
+        const scale = 1 + Math.sin(Date.now() * 0.002) * (0.05 + (100 - cwi) / 500);
+        node.scale.set(scale, scale, scale);
+      });
+      
+      // Animate edges
+      edges.forEach(edge => {
+        // Update edge positions
+        edge.line.geometry.setFromPoints([
+          new THREE.Vector3(
+            edge.node1.position.x, 
+            edge.node1.position.y, 
+            edge.node1.position.z
+          ),
+          new THREE.Vector3(
+            edge.node2.position.x, 
+            edge.node2.position.y, 
+            edge.node2.position.z
+          )
+        ]);
+        edge.line.geometry.attributes.position.needsUpdate = true;
+        
+        // Pulse opacity
+        edge.line.material.opacity = 0.2 + Math.sin(Date.now() * 0.001) * 0.1;
+      });
+      
+      // Animate pulse spheres
+      pulseSpheres.forEach(sphere => {
+        const scale = 1 + Math.sin(Date.now() * 0.003) * 0.5;
+        sphere.scale.set(scale, scale, scale);
+        sphere.material.opacity = 0.2 + Math.sin(Date.now() * 0.002) * 0.2;
+        sphere.rotation.x += 0.01;
+        sphere.rotation.y += 0.01;
+      });
+      
+      // Slowly rotate camera
+      camera.position.x = 7 * Math.sin(Date.now() * 0.0003);
+      camera.position.z = 7 * Math.cos(Date.now() * 0.0003);
+      camera.lookAt(0, 0, 0);
+      
+      renderer.render(scene, camera);
+    };
+    
+    animate();
+    
+    // Handle window resize
+    const handleResize = () => {
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(window.innerWidth, window.innerHeight);
+    };
+    
+    window.addEventListener('resize', handleResize);
+    
+    // Clean up
+    return () => {
+      window.removeEventListener('resize', handleResize);
+      if (containerRef.current && renderer.domElement) {
+        containerRef.current.removeChild(renderer.domElement);
+      }
+    };
+  }, [cwi, timeOfDay]);
+  
+  // Simulate data updates
+  useEffect(() => {
+    const interval = setInterval(() => {
+      const newCwi = Math.floor(Math.random() * 20 + 70); // Random CWI between 70-90
+      setCwi(newCwi);
+      setPulseRate(60 + (100 - newCwi));
+    }, 5000);
+    
+    return () => clearInterval(interval);
+  }, []);
+  
+  // Hazard data
+  const hazards = [
+    { id: 1, type: 'Heat Island', location: 'Industrial District', severity: 'Severe', affected: '12,480 residents', color: 'red', temperature: '42°C' },
+    { id: 2, type: 'Flood Risk', location: 'Northern Sector', severity: 'High', affected: '6,200 residents', color: 'blue', risk: '34%' },
+    { id: 3, type: 'Air Quality', location: 'City Center', severity: 'Moderate', affected: '8,750 residents', color: 'yellow', aqi: '156' }
+  ];
+  
+  // Calculate pulse animation duration based on CWI
+  const pulseDuration = 6 - (cwi / 20);
+  
+  // Intervention simulation
+  const simulateIntervention = () => {
+    setShowIntervention(true);
+    // Simulate improvement after intervention
+    setTimeout(() => {
+      setCwi(prev => Math.min(prev + 12, 100));
+      setPulseRate(prev => prev - 10);
+    }, 1000);
+    
+    // Reset after 5 seconds
+    setTimeout(() => setShowIntervention(false), 5000);
   };
-
-  const toggleFilter = (filter) => {
-    setActiveFilters((prev) =>
-      prev.includes(filter) ? prev.filter((f) => f !== filter) : [...prev, filter]
-    );
-  };
-
-  const filteredHazards = hazards.filter((h) =>
-    activeFilters.includes(h.type)
-  );
 
   return (
-    <div className="h-screen w-full relative">
-      {/* Map as background layer */}
-      <div className="absolute inset-0 z-0">
-        <MapContainer
-          center={[40.7128, -74.006]}
-          zoom={11}
-          style={{ height: "100%", width: "100%" }}
-        >
-          <TileLayer
-            url={
-              timeOfDay === "day"
-                ? "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-                : "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
-            }
-          />
-          {filteredHazards.map((hazard) => (
-            <Marker
-              key={hazard.id}
-              position={hazard.position}
-              icon={hazardIcons[hazard.type]}
-              eventHandlers={{
-                click: () =>
-                  setSelectedHazard(
-                    selectedHazard === hazard.id ? null : hazard.id
-                  ),
-              }}
-            >
-              <Popup>
-                <strong>{hazard.name}</strong>
-                <div>Severity: {Math.round(hazard.severity * 100)}%</div>
-              </Popup>
-              <Circle
-                center={hazard.position}
-                radius={hazard.severity * 1000}
-                pathOptions={{
-                  color:
-                    hazard.type === "heat"
-                      ? "red"
-                      : hazard.type === "flood"
-                      ? "blue"
-                      : "green",
-                  fillOpacity: 0.1,
-                }}
-              />
-            </Marker>
-          ))}
-        </MapContainer>
+    <div className={`min-h-screen ${timeOfDay === 'day' ? 'bg-gradient-to-br from-blue-900 to-indigo-950' : 'bg-gradient-to-br from-gray-900 to-gray-950'} text-white overflow-hidden`}>
+      {/* Background elements */}
+      <div className="fixed inset-0 opacity-30">
+        <div className="absolute top-1/4 left-1/4 w-64 h-64 bg-blue-500 rounded-full filter blur-3xl opacity-20 animate-pulse"></div>
+        <div className="absolute bottom-1/3 right-1/4 w-80 h-80 bg-green-400 rounded-full filter blur-3xl opacity-20 animate-pulse" style={{animationDelay: '2s'}}></div>
       </div>
-
-      {/* Overlay UI */}
-      {/* Top bar */}
-      <div className="absolute top-0 left-0 right-0 z-10 bg-white/90 p-4 flex justify-between items-center shadow">
-        <h1 className="text-xl font-bold flex items-center">
-          🌆 City Pulse
-        </h1>
-        <div className="flex space-x-2">
-          <button
-            onClick={() => setTimeOfDay("day")}
-            className={`px-3 py-1 rounded ${
-              timeOfDay === "day" ? "bg-yellow-300" : "bg-gray-200"
-            }`}
+      
+      {/* Header */}
+      <header className="relative z-20 py-4 px-4 md:px-6 flex flex-col md:flex-row justify-between items-center bg-gray-900 bg-opacity-70 backdrop-blur-md border-b border-blue-500 border-opacity-20">
+        <div className="flex items-center mb-3 md:mb-0">
+          <div className="w-10 h-10 rounded-lg bg-gradient-to-r from-blue-500 to-green-400 flex items-center justify-center mr-3">
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+            </svg>
+          </div>
+          <h1 className="text-xl md:text-2xl font-bold bg-gradient-to-r from-blue-400 to-green-400 bg-clip-text text-transparent">CITY HEARTBEAT</h1>
+        </div>
+        
+        <nav className="flex space-x-1 md:space-x-2 bg-gray-800 bg-opacity-50 rounded-xl p-1 mb-3 md:mb-0">
+          <button 
+            className={`px-3 py-1 md:px-4 md:py-2 text-sm md:text-base rounded-lg transition-all ${activeTab === 'overview' ? 'bg-blue-900 bg-opacity-50 text-blue-100' : 'hover:bg-gray-700'}`}
+            onClick={() => setActiveTab('overview')}
           >
-            ☀️ Day
+            Overview
           </button>
-          <button
-            onClick={() => setTimeOfDay("night")}
-            className={`px-3 py-1 rounded ${
-              timeOfDay === "night" ? "bg-gray-700 text-white" : "bg-gray-200"
-            }`}
+          <button 
+            className={`px-3 py-1 md:px-4 md:py-2 text-sm md:text-base rounded-lg transition-all ${activeTab === 'map' ? 'bg-blue-900 bg-opacity-50 text-blue-100' : 'hover:bg-gray-700'}`}
+            onClick={() => setActiveTab('map')}
           >
-            🌙 Night
+            Map
           </button>
+          <button 
+            className={`px-3 py-1 md:px-4 md:py-2 text-sm md:text-base rounded-lg transition-all ${activeTab === 'analytics' ? 'bg-blue-900 bg-opacity-50 text-blue-100' : 'hover:bg-gray-700'}`}
+            onClick={() => setActiveTab('analytics')}
+          >
+            Analytics
+          </button>
+          <button 
+            className={`px-3 py-1 md:px-4 md:py-2 text-sm md:text-base rounded-lg transition-all ${activeTab === 'intervene' ? 'bg-blue-900 bg-opacity-50 text-blue-100' : 'hover:bg-gray-700'}`}
+            onClick={() => setActiveTab('intervene')}
+          >
+            Intervene
+          </button>
+        </nav>
+        
+        <div className="flex items-center">
+          <div className="mr-3 md:mr-4 text-sm">
+            {new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
+          </div>
+          <div className="w-8 h-8 md:w-10 md:h-10 rounded-full bg-gray-700 flex items-center justify-center">
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 md:h-5 md:w-5" viewBox="0 0 20 20" fill="currentColor">
+              <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-6-3a2 2 0 11-4 0 2 2 0 014 0zm-2 4a5 5 0 00-4.546 2.916A5.986 5.986 0 005 10a6 6 0 0012 0c0-1.003-.21-1.96-.59-2.808A5 5 0 0010 11z" clipRule="evenodd" />
+            </svg>
+          </div>
         </div>
-      </div>
-
-      {/* CWI Widget */}
-      <div className="absolute top-20 right-6 z-10 bg-white shadow rounded-xl p-4 w-48 text-center">
-        <div className="text-xs text-gray-500 mb-1">
-          ❤️ City Wellbeing Index
-        </div>
-        <div className={`text-4xl font-bold ${cwiTextColor}`}>{cwi}</div>
-        <div className="text-sm">{cwiStatus}</div>
-        <div className="mt-2 h-2 bg-gray-200 rounded">
-          <div
-            className={`h-2 ${cwiColor}`}
-            style={{ width: `${cwi}%` }}
-          ></div>
-        </div>
-      </div>
-
-      {/* Hazard panel */}
-      <div
-        className={`absolute top-20 left-6 z-10 bg-white shadow rounded-xl transition-all duration-300 ${
-          isPanelCollapsed ? "w-16" : "w-80"
-        }`}
-      >
-        <button
-          className="absolute -right-3 top-4 bg-white border rounded-full px-1 shadow"
-          onClick={() => setIsPanelCollapsed(!isPanelCollapsed)}
-        >
-          {isPanelCollapsed ? "➡️" : "⬅️"}
-        </button>
-        {!isPanelCollapsed && (
-          <div className="p-4">
-            <h2 className="font-bold mb-2">⚠️ Active Risks</h2>
-            <div className="flex gap-2 mb-3">
-              <button
-                onClick={() => toggleFilter("heat")}
-                className={`px-2 py-1 rounded text-xs ${
-                  activeFilters.includes("heat")
-                    ? "bg-red-100 border border-red-300"
-                    : "bg-gray-100"
-                }`}
-              >
-                Heat
-              </button>
-              <button
-                onClick={() => toggleFilter("flood")}
-                className={`px-2 py-1 rounded text-xs ${
-                  activeFilters.includes("flood")
-                    ? "bg-blue-100 border border-blue-300"
-                    : "bg-gray-100"
-                }`}
-              >
-                Flood
-              </button>
-              <button
-                onClick={() => toggleFilter("air")}
-                className={`px-2 py-1 rounded text-xs ${
-                  activeFilters.includes("air")
-                    ? "bg-green-100 border border-green-300"
-                    : "bg-gray-100"
-                }`}
-              >
-                Air
-              </button>
-            </div>
-            <div className="space-y-2 max-h-72 overflow-y-auto">
-              {filteredHazards.map((h) => (
-                <div
-                  key={h.id}
-                  className={`p-2 rounded border cursor-pointer ${
-                    selectedHazard === h.id
-                      ? "border-blue-500 bg-blue-50"
-                      : "border-gray-200"
-                  }`}
-                  onClick={() =>
-                    setSelectedHazard(selectedHazard === h.id ? null : h.id)
-                  }
-                >
-                  <div className="font-medium">{h.name}</div>
-                  <div className="text-sm">
-                    Severity: {Math.round(h.severity * 100)}% {getTrendIcon(h.trend)}
-                  </div>
-                  {selectedHazard === h.id && (
-                    <div className="text-xs text-gray-600 mt-1">
-                      {h.description}
-                    </div>
-                  )}
+      </header>
+      
+      <main className="relative z-10">
+        {/* Three.js canvas */}
+        <div ref={containerRef} className="fixed inset-0 z-0" />
+        
+        {/* Main content area */}
+        <div className="container mx-auto px-4 md:px-6 pt-4 md:pt-6 pb-24 grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-6 relative z-10">
+          {/* Left column */}
+          <div className="lg:col-span-2 space-y-4 md:space-y-6">
+            {/* Pulse visualization */}
+            <div className="bg-gray-900 bg-opacity-70 backdrop-blur-md rounded-2xl p-4 md:p-6 border border-blue-500 border-opacity-20 shadow-2xl">
+              <div className="flex flex-col md:flex-row justify-between items-center mb-4 md:mb-6">
+                <h2 className="text-lg md:text-xl font-semibold text-blue-200 mb-2 md:mb-0">CITY WELLBEING INDEX</h2>
+                <div className="flex items-center">
+                  <div className="w-3 h-3 rounded-full bg-green-500 mr-2 animate-pulse" style={{animationDuration: `${pulseDuration}s`}}></div>
+                  <span className="text-green-400 font-medium text-sm md:text-base">Pulse: {pulseRate} BPM</span>
                 </div>
-              ))}
+              </div>
+              
+              <div className="flex items-center justify-center py-2 md:py-4">
+                <div className="relative">
+                  <div className="w-48 h-48 md:w-64 md:h-64 rounded-full border-4 border-green-500 border-opacity-30 flex items-center justify-center">
+                    <div className="text-center">
+                      <div className="text-4xl md:text-5xl font-bold text-green-400">{cwi}</div>
+                      <div className="text-blue-200 mt-1 md:mt-2 text-sm md:text-base">Current Index</div>
+                    </div>
+                  </div>
+                  
+                  {/* Pulse rings */}
+                  <div className="absolute inset-0 border-4 border-green-500 rounded-full opacity-0 animate-pulse"
+                    style={{animationDuration: `${pulseDuration}s`}}></div>
+                  <div className="absolute inset-0 border-4 border-green-500 rounded-full opacity-0 animate-pulse"
+                    style={{animationDuration: `${pulseDuration}s`, animationDelay: '1s'}}></div>
+                  <div className="absolute inset-0 border-4 border-green-500 rounded-full opacity-0 animate-pulse"
+                    style={{animationDuration: `${pulseDuration}s`, animationDelay: '2s'}}></div>
+                </div>
+              </div>
+              
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-2 md:gap-4 mt-4 md:mt-6">
+                <div className="bg-gray-800 bg-opacity-50 rounded-xl p-3 md:p-4 text-center">
+                  <div className="text-red-400 text-xl md:text-2xl font-bold">38%</div>
+                  <div className="text-blue-200 text-xs md:text-sm mt-1">Environmental Stress</div>
+                </div>
+                <div className="bg-gray-800 bg-opacity-50 rounded-xl p-3 md:p-4 text-center">
+                  <div className="text-green-400 text-xl md:text-2xl font-bold">65%</div>
+                  <div className="text-blue-200 text-xs md:text-sm mt-1">Social Vitality</div>
+                </div>
+                <div className="bg-gray-800 bg-opacity-50 rounded-xl p-3 md:p-4 text-center">
+                  <div className="text-yellow-400 text-xl md:text-2xl font-bold">82%</div>
+                  <div className="text-blue-200 text-xs md:text-sm mt-1">Infrastructure</div>
+                </div>
+                <div className="bg-gray-800 bg-opacity-50 rounded-xl p-3 md:p-4 text-center">
+                  <div className="text-purple-400 text-xl md:text-2xl font-bold">74%</div>
+                  <div className="text-blue-200 text-xs md:text-sm mt-1">Community</div>
+                </div>
+              </div>
+            </div>
+            
+            {/* Map section */}
+            <div className="bg-gray-900 bg-opacity-70 backdrop-blur-md rounded-2xl p-4 md:p-6 border border-blue-500 border-opacity-20 shadow-2xl">
+              <UrbanMonitoringMap />
             </div>
           </div>
-        )}
-      </div>
-
+          
+          {/* Right column */}
+          <div className="space-y-4 md:space-y-6">
+            {/* Active risks panel */}
+            <div className="bg-gray-900 bg-opacity-70 backdrop-blur-md rounded-2xl p-4 md:p-6 border border-blue-500 border-opacity-20 shadow-2xl">
+              <h2 className="text-lg md:text-xl font-semibold text-blue-200 mb-3 md:mb-4">TOP ACTIVE RISKS</h2>
+              
+              <div className="space-y-3 md:space-y-4">
+                {hazards.map(hazard => (
+                  <div 
+                    key={hazard.id} 
+                    className={`p-3 md:p-4 rounded-xl transition-all cursor-pointer ${
+                      activeHazard === hazard.id ? 'bg-red-900 bg-opacity-50' : 'bg-gray-800 bg-opacity-50 hover:bg-gray-700'
+                    }`}
+                    onMouseEnter={() => setActiveHazard(hazard.id)}
+                    onMouseLeave={() => setActiveHazard(null)}
+                  >
+                    <div className="flex items-start">
+                      <div className={`w-3 h-3 rounded-full bg-${hazard.color}-500 mt-1 md:mt-1.5 mr-2 md:mr-3`}></div>
+                      <div className="flex-1">
+                        <h3 className="font-medium text-white text-sm md:text-base">{hazard.type} - {hazard.location}</h3>
+                        <div className="flex flex-col md:flex-row md:justify-between md:items-center mt-1 md:mt-2">
+                          <span className="text-xs md:text-sm text-gray-400">{hazard.severity}, affecting {hazard.affected}</span>
+                          <span className={`text-${hazard.color}-400 font-bold text-sm md:text-base mt-1 md:mt-0`}>
+                            {hazard.temperature || hazard.aqi || hazard.risk}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+              
+              <button 
+                className="w-full mt-4 md:mt-6 py-2 md:py-3 bg-gradient-to-r from-blue-600 to-blue-500 rounded-xl font-medium hover:from-blue-500 hover:to-blue-400 transition-all flex items-center justify-center text-sm md:text-base"
+                onClick={simulateIntervention}
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 md:h-5 md:w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                  <path fillRule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4zm2 6a1 1 0 011-1h6a1 1 0 110 2H7a1 1 0 01-1-1zm1 3a1 1 0 100 2h6a1 1 0 100-2H7z" clipRule="evenodd" />
+                </svg>
+                Generate Intervention Report
+              </button>
+            </div>
+            
+            {/* Intervention impact panel */}
+            <div className="bg-gray-900 bg-opacity-70 backdrop-blur-md rounded-2xl p-4 md:p-6 border border-blue-500 border-opacity-20 shadow-2xl">
+              <h2 className="text-lg md:text-xl font-semibold text-blue-200 mb-3 md:mb-4">INTERVENTION IMPACT</h2>
+              
+              <div className="bg-gray-800 bg-opacity-50 rounded-xl p-3 md:p-4">
+                {showIntervention ? (
+                  <div className="text-center py-3 md:py-4">
+                    <div className="w-12 h-12 md:w-16 md:h-16 bg-green-500 rounded-full flex items-center justify-center mx-auto mb-3 md:mb-4">
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 md:h-8 md:w-8 text-white" viewBox="0 0 20 20" fill="currentColor">
+                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                      </svg>
+                    </div>
+                    <h3 className="text-green-400 font-bold text-base md:text-lg">Intervention Successful!</h3>
+                    <p className="text-blue-200 mt-1 md:mt-2 text-sm md:text-base">CWI increased by 12 points</p>
+                  </div>
+                ) : (
+                  <div className="text-center py-4 md:py-6 text-blue-200">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 md:h-12 md:w-12 mx-auto opacity-50" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+                    </svg>
+                    <p className="mt-1 md:mt-2 text-sm md:text-base">No active interventions</p>
+                  </div>
+                )}
+              </div>
+              
+              <div className="mt-3 md:mt-4 grid grid-cols-2 gap-2 md:gap-4">
+                <div className="bg-gray-800 bg-opacity-50 rounded-xl p-2 md:p-3 text-center">
+                  <div className="text-blue-400 text-xs md:text-sm">Response Time</div>
+                  <div className="text-white font-bold text-sm md:text-base">4.2min</div>
+                </div>
+                <div className="bg-gray-800 bg-opacity-50 rounded-xl p-2 md:p-3 text-center">
+                  <div className="text-blue-400 text-xs md:text-sm">Effectiveness</div>
+                  <div className="text-white font-bold text-sm md:text-base">87%</div>
+                </div>
+              </div>
+            </div>
+            
+            {/* Status panel */}
+            <div className="bg-gray-900 bg-opacity-70 backdrop-blur-md rounded-2xl p-4 md:p-6 border border-blue-500 border-opacity-20 shadow-2xl">
+              <h2 className="text-lg md:text-xl font-semibold text-blue-200 mb-3 md:mb-4">SYSTEM STATUS</h2>
+              
+              <div className="space-y-2 md:space-y-4">
+                <div className="flex items-center justify-between">
+                  <span className="text-blue-200 text-sm md:text-base">Data Sources</span>
+                  <span className="text-green-400 font-medium text-sm md:text-base">Online</span>
+                </div>
+                
+                <div className="flex items-center justify-between">
+                  <span className="text-blue-200 text-sm md:text-base">Network Integrity</span>
+                  <span className="text-green-400 font-medium text-sm md:text-base">98%</span>
+                </div>
+                
+                <div className="flex items-center justify-between">
+                  <span className="text-blue-200 text-sm md:text-base">Last Update</span>
+                  <span className="text-blue-200 text-sm md:text-base">Just now</span>
+                </div>
+                
+                <div className="flex items-center justify-between">
+                  <span className="text-blue-200 text-sm md:text-base">Next Update</span>
+                  <span className="text-blue-200 text-sm md:text-base">In 2 minutes</span>
+                </div>
+              </div>
+              
+              <div className="mt-4 md:mt-6 bg-gray-800 bg-opacity-50 rounded-xl p-3 md:p-4">
+                <div className="flex justify-between items-center mb-2">
+                  <span className="text-blue-200 text-sm md:text-base">Storage</span>
+                  <span className="text-blue-200 text-sm md:text-base">4.2TB / 10TB</span>
+                </div>
+                <div className="w-full bg-gray-700 h-2 rounded-full">
+                  <div className="bg-gradient-to-r from-blue-400 to-green-400 h-2 rounded-full" style={{width: '42%'}}></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </main>
+      
+      {/* Hover stat card */}
+      {activeHazard && (
+        <div className="fixed z-30 bg-gray-900 bg-opacity-90 backdrop-blur-md rounded-2xl p-4 w-56 md:w-64 border border-blue-500 border-opacity-30 shadow-2xl transition-all"
+             style={{ top: '50%', left: '50%', transform: 'translate(-50%, -50%)' }}>
+          <h3 className="font-semibold text-base md:text-lg text-white">{hazards.find(h => h.id === activeHazard).type}</h3>
+          <div className="flex items-center mt-1 md:mt-2">
+            <span className={`w-3 h-3 rounded-full bg-${hazards.find(h => h.id === activeHazard).color}-500 mr-2`}></span>
+            <span className={`text-${hazards.find(h => h.id === activeHazard).color}-400 text-sm md:text-base`}>{hazards.find(h => h.id === activeHazard).severity}</span>
+          </div>
+          <div className="mt-2 md:mt-3 text-xs md:text-sm">
+            <div className="flex justify-between">
+              <span className="text-gray-400">Location:</span>
+              <span className="text-white">{hazards.find(h => h.id === activeHazard).location}</span>
+            </div>
+            <div className="flex justify-between mt-1">
+              <span className="text-gray-400">Affected:</span>
+              <span className="text-white">{hazards.find(h => h.id === activeHazard).affected}</span>
+            </div>
+            <div className="flex justify-between mt-1">
+              <span className="text-gray-400">Last update:</span>
+              <span className="text-white">2 minutes ago</span>
+            </div>
+            <div className="flex justify-between mt-1">
+              <span className="text-gray-400">Response:</span>
+              <span className="text-green-400">Intervention needed</span>
+            </div>
+          </div>
+        </div>
+      )}
+      
       {/* Footer */}
-      <div className="absolute bottom-4 left-1/2 -translate-x-1/2 bg-black/70 text-white px-4 py-2 text-xs rounded-full z-10">
-        📡 Data from City Sensors • Real-time
-      </div>
+      <footer className="fixed bottom-0 left-0 right-0 z-20 py-2 md:py-3 px-4 md:px-6 bg-gray-900 bg-opacity-70 backdrop-blur-md border-t border-blue-500 border-opacity-20 flex flex-col md:flex-row justify-between items-center">
+        <div className="text-xs md:text-sm text-blue-200 mb-1 md:mb-0">
+          Urban Resilience Monitoring System • v2.4.1
+        </div>
+        
+        <div className="flex items-center space-x-3 md:space-x-4">
+          <div className="flex items-center">
+            <div className="w-2 h-2 rounded-full bg-green-500 mr-1 md:mr-2"></div>
+            <span className="text-green-400 text-xs md:text-sm">Systems Normal</span>
+          </div>
+          
+          <div className="text-xs md:text-sm text-blue-200">
+            {new Date().toLocaleDateString()}
+          </div>
+        </div>
+      </footer>
     </div>
   );
-}
+};
 
 export default Pulse;
