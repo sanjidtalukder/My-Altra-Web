@@ -4,6 +4,7 @@ import L from 'leaflet';
 import { FiLayers, FiClock, FiMessageSquare, FiAlertTriangle, FiCheckSquare, FiUser, FiMapPin, FiThumbsUp, FiCalendar, FiX, FiPlus, FiMinus, FiSearch, FiFilter, FiEye, FiEyeOff, FiArrowRight } from 'react-icons/fi';
 import 'leaflet/dist/leaflet.css';
 import { motion } from "framer-motion";
+import PulseDashboard from './Pactrice/PulseDashboard';
 
 
 // Fix for default markers in Leaflet
@@ -558,6 +559,7 @@ const Engage = () => {
   };
 
   return (
+    <>
    <div className="flex h-screen bg-gray-900 text-white overflow-hidden">
   {/* Left Column - Map (70%) */}
   <div className="w-7/10 h-full z-10 relative">
@@ -807,7 +809,15 @@ const Engage = () => {
   {showConversation && selectedFeature && (
     <ConversationBubble feature={selectedFeature} onClose={() => setShowConversation(false)} />
   )}
-</div>
+
+  
+
+</div><br></br>
+<h1 className='text-white'> This is for pulse section</h1><br />
+<PulseDashboard></PulseDashboard>
+<h1 className='text-white'> This is for pulse section</h1><br />
+<PulseDashboard></PulseDashboard>
+</>
 
   );
 };

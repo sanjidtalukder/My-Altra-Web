@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import * as THREE from 'three';
 import { FiArrowUp, FiArrowDown, FiMap, FiActivity, FiLayers, FiBarChart2, FiZap, FiClock, FiAlertTriangle, FiCheckCircle, FiUser, FiDatabase } from 'react-icons/fi';
 
-const PulseDashboard = () => {
+const PulseThree = () => {
   const containerRef = useRef(null);
   const [cwi, setCwi] = useState(72);
   const [pulseRate, setPulseRate] = useState(68);
@@ -212,6 +212,19 @@ const PulseDashboard = () => {
       if (containerRef.current && renderer.domElement) {
         containerRef.current.removeChild(renderer.domElement);
       }
+      renderer.dispose();
+      
+      // Dispose of geometries and materials
+      nodeGeometry.dispose();
+      nodes.forEach(node => node.material.dispose());
+      edges.forEach(edge => {
+        edge.line.geometry.dispose();
+        edge.line.material.dispose();
+      });
+      pulseSpheres.forEach(sphere => {
+        sphere.geometry.dispose();
+        sphere.material.dispose();
+      });
     };
   }, [cwi, timeOfDay]);
   
@@ -455,18 +468,18 @@ const PulseDashboard = () => {
         {/* Grid lines */}
         <div className="absolute inset-0 opacity-10">
           {Array.from({ length: 20 }).map((_, i) => (
-            <div key={i} className="absolute top-0 bottom-0 left-0 right-0 border border-gray-500"
+            <div key={i} className="absolute top-0 bottom-0 left-0 right-0 border border-gray-500" 
               style={{left: `${i * 5}%`, width: '1px'}}></div>
           ))}
           {Array.from({ length: 20 }).map((_, i) => (
-            <div key={i} className="absolute top-0 bottom-0 left-0 right-0 border border-gray-500"
+            <div key={i} className="absolute top-0 bottom-0 left-0 right-0 border border-gray-500" 
               style={{top: `${i * 5}%`, height: '1px'}}></div>
           ))}
         </div>
         
         {/* Hazard markers */}
         {hazards.map((hazard, i) => (
-          <div key={hazard.id}
+          <div key={hazard.id} 
             className={`absolute w-8 h-8 rounded-full ${getColorClass(hazard.color, 'bg')} flex items-center justify-center cursor-pointer transform hover:scale-125 transition-transform`}
             style={{
               left: `${20 + i * 25}%`,
@@ -791,248 +804,247 @@ const PulseDashboard = () => {
     </div>
   );
 
- return (
-  <div className={`min-h-screen ${timeOfDay === 'day' ? 'bg-gradient-to-br from-blue-900 to-indigo-950' : 'bg-gradient-to-br from-gray-900 to-gray-950'} text-white overflow-hidden`}>
-    {/* Background elements */}
-    <div className="fixed inset-0 opacity-30">
-      <div className="absolute top-1/4 left-1/4 w-64 h-64 bg-blue-500 rounded-full filter blur-3xl opacity-20 animate-pulse"></div>
-      <div className="absolute bottom-1/3 right-1/4 w-80 h-80 bg-green-400 rounded-full filter blur-3xl opacity-20 animate-pulse" style={{ animationDelay: '2s' }}></div>
-    </div>
-
-    {/* Header */}
-    <header className="relative z-20 py-4 px-6 flex justify-between items-center bg-gray-900 bg-opacity-70 backdrop-blur-md border-b border-blue-500 border-opacity-20">
-      <div className="flex items-center">
-        <div className="w-10 h-10 rounded-lg bg-gradient-to-r from-blue-500 to-green-400 flex items-center justify-center mr-3">
-          <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
-          </svg>
-        </div>
-        <h1 className="text-2xl font-bold bg-gradient-to-r from-blue-400 to-green-400 bg-clip-text text-transparent">CITY HEARTBEAT</h1>
+  return (
+    <div className={`min-h-screen ${timeOfDay === 'day' ? 'bg-gradient-to-br from-blue-900 to-indigo-950' : 'bg-gradient-to-br from-gray-900 to-gray-950'} text-white overflow-hidden`}>
+      {/* Background elements */}
+      <div className="fixed inset-0 opacity-30">
+        <div className="absolute top-1/4 left-1/4 w-64 h-64 bg-blue-500 rounded-full filter blur-3xl opacity-20 animate-pulse"></div>
+        <div className="absolute bottom-1/3 right-1/4 w-80 h-80 bg-green-400 rounded-full filter blur-3xl opacity-20 animate-pulse" style={{animationDelay: '2s'}}></div>
       </div>
-
-      <nav className="flex space-x-2 bg-gray-800 bg-opacity-50 rounded-xl p-1">
-        <button
-          className={`px-4 py-2 rounded-lg transition-all ${activeTab === 'overview' ? 'bg-blue-900 bg-opacity-50 text-blue-100' : 'hover:bg-gray-700'}`}
-          onClick={() => setActiveTab('overview')}
-        >
-          Overview
-        </button>
-        <button
-          className={`px-4 py-2 rounded-lg transition-all ${activeTab === 'map' ? 'bg-blue-900 bg-opacity-50 text-blue-100' : 'hover:bg-gray-700'}`}
-          onClick={() => setActiveTab('map')}
-        >
-          Map
-        </button>
-        <button
-          className={`px-4 py-2 rounded-lg transition-all ${activeTab === 'analytics' ? 'bg-blue-900 bg-opacity-50 text-blue-100' : 'hover:bg-gray-700'}`}
-          onClick={() => setActiveTab('analytics')}
-        >
-          Analytics
-        </button>
-        <button
-          className={`px-4 py-2 rounded-lg transition-all ${activeTab === 'intervene' ? 'bg-blue-900 bg-opacity-50 text-blue-100' : 'hover:bg-gray-700'}`}
-          onClick={() => setActiveTab('intervene')}
-        >
-          Intervene
-        </button>
-      </nav>
-
-      <div className="flex items-center">
-        <div className="mr-4 text-sm">
-          {new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+      
+      {/* Header */}
+      <header className="relative z-20 py-4 px-6 flex justify-between items-center bg-gray-900 bg-opacity-70 backdrop-blur-md border-b border-blue-500 border-opacity-20">
+        <div className="flex items-center">
+          <div className="w-10 h-10 rounded-lg bg-gradient-to-r from-blue-500 to-green-400 flex items-center justify-center mr-3">
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+            </svg>
+          </div>
+          <h1 className="text-2xl font-bold bg-gradient-to-r from-blue-400 to-green-400 bg-clip-text text-transparent">CITY HEARTBEAT</h1>
         </div>
-        <div className="w-10 h-10 rounded-full bg-gray-700 flex items-center justify-center">
-          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-            <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-6-3a2 2 0 11-4 0 2 2 0 014 0zm-2 4a5 5 0 00-4.546 2.916A5.986 5.986 0 005 10a6 6 0 0012 0c0-1.003-.21-1.96-.59-2.808A5 5 0 0010 11z" clipRule="evenodd" />
-          </svg>
+        
+        <nav className="flex space-x-2 bg-gray-800 bg-opacity-50 rounded-xl p-1">
+          <button 
+            className={`px-4 py-2 rounded-lg transition-all ${activeTab === 'overview' ? 'bg-blue-900 bg-opacity-50 text-blue-100' : 'hover:bg-gray-700'}`}
+            onClick={() => setActiveTab('overview')}
+          >
+            Overview
+          </button>
+          <button 
+            className={`px-4 py-2 rounded-lg transition-all ${activeTab === 'map' ? 'bg-blue-900 bg-opacity-50 text-blue-100' : 'hover:bg-gray-700'}`}
+            onClick={() => setActiveTab('map')}
+          >
+            Map
+          </button>
+          <button 
+            className={`px-4 py-2 rounded-lg transition-all ${activeTab === 'analytics' ? 'bg-blue-900 bg-opacity-50 text-blue-100' : 'hover:bg-gray-700'}`}
+            onClick={() => setActiveTab('analytics')}
+          >
+            Analytics
+          </button>
+          <button 
+            className={`px-4 py-2 rounded-lg transition-all ${activeTab === 'intervene' ? 'bg-blue-900 bg-opacity-50 text-blue-100' : 'hover:bg-gray-700'}`}
+            onClick={() => setActiveTab('intervene')}
+          >
+            Intervene
+          </button>
+        </nav>
+        
+        <div className="flex items-center">
+          <div className="mr-4 text-sm">
+            {new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
+          </div>
+          <div className="w-10 h-10 rounded-full bg-gray-700 flex items-center justify-center">
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+              <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-6-3a2 2 0 11-4 0 2 2 0 014 0zm-2 4a5 5 0 00-4.546 2.916A5.986 5.986 0 005 10a6 6 0 0012 0c0-1.003-.21-1.96-.59-2.808A5 5 0 0010 11z" clipRule="evenodd" />
+            </svg>
+          </div>
         </div>
-      </div>
-    </header>
-
-    <main className="relative z-10">
-      {/* Three.js canvas */}
-      <div ref={containerRef} className="fixed inset-0 z-0" />
-
-      {/* Main content area */}
-      <div className="container mx-auto px-6 pt-6 pb-24 grid grid-cols-1 lg:grid-cols-3 gap-6 relative z-10">
-        {/* Left column */}
-        <div className="lg:col-span-2 space-y-6">
-          {renderTabContent()}
-        </div>
-
-        {/* Right column */}
-        <div className="space-y-6">
-          {/* Active risks panel */}
-          <div className="bg-gray-900 bg-opacity-70 backdrop-blur-md rounded-2xl p-6 border border-blue-500 border-opacity-20 shadow-2xl">
-            <h2 className="text-xl font-semibold text-blue-200 mb-4">TOP ACTIVE RISKS</h2>
-
-            <div className="space-y-4">
-              {hazards.map(hazard => (
-                <div
-                  key={hazard.id}
-                  className={`p-4 rounded-xl transition-all cursor-pointer ${
-                    activeHazard === hazard.id ? getColorClass(hazard.color, 'light') : 'bg-gray-800 bg-opacity-50 hover:bg-gray-700'
-                  }`}
-                  onMouseEnter={() => setActiveHazard(hazard.id)}
-                  onMouseLeave={() => setActiveHazard(null)}
-                >
-                  <div className="flex items-start">
-                    <div className={`w-3 h-3 rounded-full ${getColorClass(hazard.color, 'bg')} mt-1.5 mr-3`}></div>
-                    <div className="flex-1">
-                      <h3 className="font-medium text-white">{hazard.type} - {hazard.location}</h3>
-                      <div className="flex justify-between items-center mt-2">
-                        <span className="text-sm text-gray-400">{hazard.severity}, affecting {hazard.affected}</span>
-                        <span className={`${getColorClass(hazard.color, 'text')} font-bold`}>
-                          {hazard.temperature || hazard.aqi || hazard.risk || hazard.consumption}
-                        </span>
-                      </div>
-                      <div className="text-xs text-gray-400 mt-2">
-                        Trend: {hazard.trend} • {hazard.response}
+      </header>
+      
+      <main className="relative z-10">
+        {/* Three.js canvas */}
+        <div ref={containerRef} className="fixed inset-0 z-0" />
+        
+        {/* Main content area */}
+        <div className="container mx-auto px-6 pt-6 pb-24 grid grid-cols-1 lg:grid-cols-3 gap-6 relative z-10">
+          {/* Left column */}
+          <div className="lg:col-span-2 space-y-6">
+            {renderTabContent()}
+          </div>
+          
+          {/* Right column */}
+          <div className="space-y-6">
+            {/* Active risks panel */}
+            <div className="bg-gray-900 bg-opacity-70 backdrop-blur-md rounded-2xl p-6 border border-blue-500 border-opacity-20 shadow-2xl">
+              <h2 className="text-xl font-semibold text-blue-200 mb-4">TOP ACTIVE RISKS</h2>
+              
+              <div className="space-y-4">
+                {hazards.map(hazard => (
+                  <div 
+                    key={hazard.id} 
+                    className={`p-4 rounded-xl transition-all cursor-pointer ${
+                      activeHazard === hazard.id ? getColorClass(hazard.color, 'light') : 'bg-gray-800 bg-opacity-50 hover:bg-gray-700'
+                    }`}
+                    onMouseEnter={() => setActiveHazard(hazard.id)}
+                    onMouseLeave={() => setActiveHazard(null)}
+                  >
+                    <div className="flex items-start">
+                      <div className={`w-3 h-3 rounded-full ${getColorClass(hazard.color, 'bg')} mt-1.5 mr-3`}></div>
+                      <div className="flex-1">
+                        <h3 className="font-medium text-white">{hazard.type} - {hazard.location}</h3>
+                        <div className="flex justify-between items-center mt-2">
+                          <span className="text-sm text-gray-400">{hazard.severity}, affecting {hazard.affected}</span>
+                          <span className={`${getColorClass(hazard.color, 'text')} font-bold`}>
+                            {hazard.temperature || hazard.aqi || hazard.risk || hazard.consumption}
+                          </span>
+                        </div>
+                        <div className="text-xs text-gray-400 mt-2">
+                          Trend: {hazard.trend} • {hazard.response}
+                        </div>
                       </div>
                     </div>
                   </div>
-                </div>
-              ))}
+                ))}
+              </div>
+              
+              <button 
+                className="w-full mt-6 py-3 bg-gradient-to-r from-blue-600 to-blue-500 rounded-xl font-medium hover:from-blue-500 hover:to-blue-400 transition-all flex items-center justify-center"
+                onClick={simulateIntervention}
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                  <path fillRule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4zm2 6a1 1 0 011-1h6a1 1 0 110 2H7a1 1 0 01-1-1zm1 3a1 1 0 100 2h6a1 1 0 100-2H7z" clipRule="evenodd" />
+                </svg>
+                Generate Intervention Report
+              </button>
             </div>
-
-            <button
-              className="w-full mt-6 py-3 bg-gradient-to-r from-blue-600 to-blue-500 rounded-xl font-medium hover:from-blue-500 hover:to-blue-400 transition-all flex items-center justify-center"
-              onClick={simulateIntervention}
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
-                <path fillRule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4zm2 6a1 1 0 011-1h6a1 1 0 110 2H7a1 1 0 01-1-1zm1 3a1 1 0 100 2h6a1 1 0 100-2H7z" clipRule="evenodd" />
-              </svg>
-              Generate Intervention Report
-            </button>
-          </div>
-
-          {/* Intervention impact panel */}
-          <div className="bg-gray-900 bg-opacity-70 backdrop-blur-md rounded-2xl p-6 border border-blue-500 border-opacity-20 shadow-2xl">
-            <h2 className="text-xl font-semibold text-blue-200 mb-4">INTERVENTION IMPACT</h2>
-
-            <div className="bg-gray-800 bg-opacity-50 rounded-xl p-4">
-              {showIntervention ? (
-                <div className="text-center py-4">
-                  <div className="w-16 h-16 bg-green-500 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-white" viewBox="0 0 20 20" fill="currentColor">
-                      <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                    </svg>
+            
+            {/* Intervention impact panel */}
+            <div className="bg-gray-900 bg-opacity-70 backdrop-blur-md rounded-2xl p-6 border border-blue-500 border-opacity-20 shadow-2xl">
+              <h2 className="text-xl font-semibold text-blue-200 mb-4">INTERVENTION IMPACT</h2>
+              
+              <div className="bg-gray-800 bg-opacity-50 rounded-xl p-4">
+                {showIntervention ? (
+                  <div className="text-center py-4">
+                    <div className="w-16 h-16 bg-green-500 rounded-full flex items-center justify-center mx-auto mb-4">
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-white" viewBox="0 0 20 20" fill="currentColor">
+                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                      </svg>
+                    </div>
+                    <h3 className="text-green-400 font-bold text-lg">Intervention Successful!</h3>
+                    <p className="text-blue-200 mt-2">CWI increased by 12 points</p>
                   </div>
-                  <h3 className="text-green-400 font-bold text-lg">Intervention Successful!</h3>
-                  <p className="text-blue-200 mt-2">CWI increased by 12 points</p>
+                ) : (
+                  <div className="text-center py-6 text-blue-200">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-12 w-12 mx-auto opacity-50" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+                    </svg>
+                    <p className="mt-2">No active interventions</p>
+                  </div>
+                )}
+              </div>
+              
+              <div className="mt-4 grid grid-cols-2 gap-4">
+                <div className="bg-gray-800 bg-opacity-50 rounded-xl p-3 text-center">
+                  <div className="text-blue-400 text-sm">Response Time</div>
+                  <div className="text-white font-bold">4.2min</div>
                 </div>
-              ) : (
-                <div className="text-center py-6 text-blue-200">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-12 w-12 mx-auto opacity-50" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
-                  </svg>
-                  <p className="mt-2">No active interventions</p>
+                <div className="bg-gray-800 bg-opacity-50 rounded-xl p-3 text-center">
+                  <div className="text-blue-400 text-sm">Effectiveness</div>
+                  <div className="text-white font-bold">87%</div>
                 </div>
-              )}
-            </div>
-
-            <div className="mt-4 grid grid-cols-2 gap-4">
-              <div className="bg-gray-800 bg-opacity-50 rounded-xl p-3 text-center">
-                <div className="text-blue-400 text-sm">Response Time</div>
-                <div className="text-white font-bold">4.2min</div>
-              </div>
-              <div className="bg-gray-800 bg-opacity-50 rounded-xl p-3 text-center">
-                <div className="text-blue-400 text-sm">Effectiveness</div>
-                <div className="text-white font-bold">87%</div>
               </div>
             </div>
-          </div>
-
-          {/* Status panel */}
-          <div className="bg-gray-900 bg-opacity-70 backdrop-blur-md rounded-2xl p-6 border border-blue-500 border-opacity-20 shadow-2xl">
-            <h2 className="text-xl font-semibold text-blue-200 mb-4">SYSTEM STATUS</h2>
-
-            <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <span className="text-blue-200">Data Sources</span>
-                <span className="text-green-400 font-medium">Online</span>
+            
+            {/* Status panel */}
+            <div className="bg-gray-900 bg-opacity-70 backdrop-blur-md rounded-2xl p-6 border border-blue-500 border-opacity-20 shadow-2xl">
+              <h2 className="text-xl font-semibold text-blue-200 mb-4">SYSTEM STATUS</h2>
+              
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <span className="text-blue-200">Data Sources</span>
+                  <span className="text-green-400 font-medium">Online</span>
+                </div>
+                
+                <div className="flex items-center justify-between">
+                  <span className="text-blue-200">Network Integrity</span>
+                  <span className="text-green-400 font-medium">98%</span>
+                </div>
+                
+                <div className="flex items-center justify-between">
+                  <span className="text-blue-200">Last Update</span>
+                  <span className="text-blue-200">Just now</span>
+                </div>
+                
+                <div className="flex items-center justify-between">
+                  <span className="text-blue-200">Next Update</span>
+                  <span className="text-blue-200">In 2 minutes</span>
+                </div>
               </div>
-
-              <div className="flex items-center justify-between">
-                <span className="text-blue-200">Network Integrity</span>
-                <span className="text-green-400 font-medium">98%</span>
-              </div>
-
-              <div className="flex items-center justify-between">
-                <span className="text-blue-200">Last Update</span>
-                <span className="text-blue-200">Just now</span>
-              </div>
-
-              <div className="flex items-center justify-between">
-                <span className="text-blue-200">Next Update</span>
-                <span className="text-blue-200">In 2 minutes</span>
-              </div>
-            </div>
-
-            <div className="mt-6 bg-gray-800 bg-opacity-50 rounded-xl p-4">
-              <div className="flex justify-between items-center mb-2">
-                <span className="text-blue-200">Storage</span>
-                <span className="text-blue-200">4.2TB / 10TB</span>
-              </div>
-              <div className="w-full bg-gray-700 h-2 rounded-full">
-                <div className="bg-gradient-to-r from-blue-400 to-green-400 h-2 rounded-full" style={{ width: '42%' }}></div>
+              
+              <div className="mt-6 bg-gray-800 bg-opacity-50 rounded-xl p-4">
+                <div className="flex justify-between items-center mb-2">
+                  <span className="text-blue-200">Storage</span>
+                  <span className="text-blue-200">4.2TB / 10TB</span>
+                </div>
+                <div className="w-full bg-gray-700 h-2 rounded-full">
+                  <div className="bg-gradient-to-r from-blue-400 to-green-400 h-2 rounded-full" style={{width: '42%'}}></div>
+                </div>
               </div>
             </div>
           </div>
         </div>
-      </div>
-    </main>
-
-    {/* Hover stat card */}
-    {activeHazard && (
-      <div
-        className="fixed z-30 bg-gray-900 bg-opacity-90 backdrop-blur-md rounded-2xl p-4 w-64 border border-blue-500 border-opacity-30 shadow-2xl transition-all"
-        style={{ top: '40%', left: '50%', transform: 'translate(-50%, -50%)' }}
-      >
-        <h3 className="font-semibold text-lg text-white">{hazards.find(h => h.id === activeHazard).type}</h3>
-        <div className="flex items-center mt-2">
-          <span className={`w-3 h-3 rounded-full ${getColorClass(hazards.find(h => h.id === activeHazard).color, 'bg')} mr-2`}></span>
-          <span className={`${getColorClass(hazards.find(h => h.id === activeHazard).color, 'text')}`}>{hazards.find(h => h.id === activeHazard).severity}</span>
-        </div>
-        <div className="mt-3 text-sm">
-          <div className="flex justify-between">
-            <span className="text-gray-400">Location:</span>
-            <span className="text-white">{hazards.find(h => h.id === activeHazard).location}</span>
+      </main>
+      
+      {/* Hover stat card */}
+      {activeHazard && (
+        <div className="fixed z-30 bg-gray-900 bg-opacity-90 backdrop-blur-md rounded-2xl p-4 w-64 border border-blue-500 border-opacity-30 shadow-2xl transition-all"
+             style={{ top: '40%', left: '50%', transform: 'translate(-50%, -50%)' }}>
+          <h3 className="font-semibold text-lg text-white">{hazards.find(h => h.id === activeHazard).type}</h3>
+          <div className="flex items-center mt-2">
+            <span className={`w-3 h-3 rounded-full ${getColorClass(hazards.find(h => h.id === activeHazard).color, 'bg')} mr-2`}></span>
+            <span className={`${getColorClass(hazards.find(h => h.id === activeHazard).color, 'text')}`}>{hazards.find(h => h.id === activeHazard).severity}</span>
           </div>
-          <div className="flex justify-between mt-1">
-            <span className="text-gray-400">Affected:</span>
-            <span className="text-white">{hazards.find(h => h.id === activeHazard).affected}</span>
-          </div>
-          <div className="flex justify-between mt-1">
-            <span className="text-gray-400">Last update:</span>
-            <span className="text-white">2 minutes ago</span>
-          </div>
-          <div className="flex justify-between mt-1">
-            <span className="text-gray-400">Response:</span>
-            <span className="text-green-400">Intervention needed</span>
+          <div className="mt-3 text-sm">
+            <div className="flex justify-between">
+              <span className="text-gray-400">Location:</span>
+              <span className="text-white">{hazards.find(h => h.id === activeHazard).location}</span>
+            </div>
+            <div className="flex justify-between mt-1">
+              <span className="text-gray-400">Affected:</span>
+              <span className="text-white">{hazards.find(h => h.id === activeHazard).affected}</span>
+            </div>
+            <div className="flex justify-between mt-1">
+              <span className="text-gray-400">Last update:</span>
+              <span className="text-white">2 minutes ago</span>
+            </div>
+            <div className="flex justify-between mt-1">
+              <span className="text-gray-400">Response:</span>
+              <span className="text-green-400">Intervention needed</span>
+            </div>
           </div>
         </div>
-      </div>
-    )}
-
-    {/* Footer */}
-    <footer className="fixed bottom-0 left-0 right-0 z-20 py-3 px-6 bg-gray-900 bg-opacity-70 backdrop-blur-md border-t border-blue-500 border-opacity-20 flex justify-between items-center">
-      <div className="text-sm text-blue-200">
-        Urban Resilience Monitoring System • v2.4.1
-      </div>
-
-      <div className="flex items-center space-x-4">
-        <div className="flex items-center">
-          <div className="w-2 h-2 rounded-full bg-green-500 mr-2"></div>
-          <span className="text-green-400 text-sm">Systems Normal</span>
-        </div>
-
+      )}
+      
+      {/* Footer */}
+      <footer className="fixed bottom-0 left-0 right-0 z-20 py-3 px-6 bg-gray-900 bg-opacity-70 backdrop-blur-md border-t border-blue-500 border-opacity-20 flex justify-between items-center">
         <div className="text-sm text-blue-200">
-          {new Date().toLocaleDateString()}
+          Urban Resilience Monitoring System • v2.4.1
         </div>
-      </div>
-    </footer>
-  </div>
-);
-}
-export default PulseDashboard;
+        
+        <div className="flex items-center space-x-4">
+          <div className="flex items-center">
+            <div className="w-2 h-2 rounded-full bg-green-500 mr-2"></div>
+            <span className="text-green-400 text-sm">Systems Normal</span>
+          </div>
+          
+          <div className="text-sm text-blue-200">
+            {new Date().toLocaleDateString()}
+          </div>
+        </div>
+      </footer>
+    </div>
+  );
+};
+
+export default PulseThree;
