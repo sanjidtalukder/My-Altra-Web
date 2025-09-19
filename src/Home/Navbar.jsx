@@ -14,6 +14,8 @@ const Navbar = () => {
     { name: "Data Lab", path: "/data-lab", icon: "🧪" },
     { name: "Vision Roadmap", path: "/vision-roadmap", icon: "🚀" },
     { name: "New", path: "/new", icon: "💬" },
+    { name: "PulseNew", path: "/pulsenew", icon: "💬" },
+     { name: "datalabs", path: "/datalabs", icon: "💬" },
   ];
 
   const closeMenu = () => setIsMenuOpen(false);

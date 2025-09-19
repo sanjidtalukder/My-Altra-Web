@@ -11,6 +11,9 @@ import Engage from "../Pages/Engage";
 import DataLab from "../Pages/DataLab";
 import Atlas from "../components/Atlas";
 import New from "../Pages/New";
+import PulseNew from "../Pages/Pulse/PulseNew";
+import DataLabs from "../components/DataLabs";
+
 
 
 
@@ -29,6 +32,8 @@ export const router = createBrowserRouter([
       { path: "data-lab", element: <DataLab></DataLab> },
       { path: "vision-roadmap", element: <Vision></Vision> },
       { path: "new", element: <New></New> },
+      { path: "pulsenew", element: <PulseNew></PulseNew> },
+      { path: "datalabs", element: <DataLabs></DataLabs> },
     ],
   },
 ]);
