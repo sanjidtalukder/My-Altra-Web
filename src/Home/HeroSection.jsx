@@ -151,7 +151,7 @@ const HeroSection = () => {
           isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'
         }`}
       >
-        <h1 className="text-4xl md:text-6xl font-extrabold leading-tight mb-6 drop-shadow-lg">
+        <h1 className="text-4xl text-white md:text-6xl font-extrabold leading-tight mb-6 drop-shadow-lg">
           ASTRA
           <br />
           <span className="text-green-400">The Digital Nervous System</span>
