@@ -1,8 +1,8 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { motion } from 'framer-motion';
-import { FiLayers, FiClock, FiEye, FiGlobe, FiAlertTriangle, FiHome, FiInfo, FiPlay, FiPause, FiZoomIn } from 'react-icons/fi';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { FiLayers, FiClock, FiEye, FiGlobe, FiAlertTriangle, FiHome, FiInfo, FiPlay, FiPause, FiX, FiChevronRight, FiChevronDown } from 'react-icons/fi';
 
-// Demo data embedded directly to avoid import issues
+// Demo data
 const hazardData = {
   type: "FeatureCollection",
   features: [
@@ -39,10 +39,19 @@ interface Link {
   type: string;
 }
 
+interface VisibleLayers {
+  heat: boolean;
+  flood: boolean;
+  fire: boolean;
+  air: boolean;
+  communities: boolean;
+  connections: boolean;
+}
+
 const Atlas: React.FC = () => {
   const [equityLensActive, setEquityLensActive] = useState(false);
   const [timePeriod, setTimePeriod] = useState('present');
-  const [visibleLayers, setVisibleLayers] = useState({
+  const [visibleLayers, setVisibleLayers] = useState<VisibleLayers>({
     heat: true,
     flood: true,
     fire: true,
@@ -54,10 +63,82 @@ const Atlas: React.FC = () => {
   const [isPlaying, setIsPlaying] = useState(false);
   const [simulationSpeed, setSimulationSpeed] = useState(1);
   const [showTutorial, setShowTutorial] = useState(true);
+  const [showLayerControls, setShowLayerControls] = useState(true);
+  const [showTimeControls, setShowTimeControls] = useState(true);
+  const [showSimulationControls, setShowSimulationControls] = useState(true);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const animationRef = useRef<number>();
 
-  // Animation loop for network visualization
+  const getFilteredHazards = (): typeof hazardData.features => {
+    const now = new Date('2024-01-12T00:00:00Z');
+    return hazardData.features.filter((feature) => {
+      const timestamp = new Date(feature.properties.timestamp);
+      if (timePeriod === 'past') return timestamp < now;
+      if (timePeriod === 'present') return (
+        timestamp >= new Date('2024-01-12T00:00:00Z') &&
+        timestamp <= new Date('2024-01-16T00:00:00Z')
+      );
+      if (timePeriod === 'future') return timestamp > new Date('2024-01-16T00:00:00Z');
+      return true;
+    });
+  };
+
+  const handleCanvasClick = useCallback((event: MouseEvent) => {
+    if (!canvasRef.current) return;
+    
+    const canvas = canvasRef.current;
+    const rect = canvas.getBoundingClientRect();
+    const scaleX = canvas.width / rect.width;
+    const scaleY = canvas.height / rect.height;
+    
+    const clickX = (event.clientX - rect.left) * scaleX;
+    const clickY = (event.clientY - rect.top) * scaleY;
+
+    if (equityLensActive) {
+      setSelectedNode(null);
+      return;
+    }
+
+    const filteredHazards = getFilteredHazards();
+    const allNodes = [...filteredHazards, ...communityData.features];
+    
+    for (let i = 0; i < allNodes.length; i++) {
+      const feature = allNodes[i];
+      const isHazard = 'severity' in feature.properties;
+      
+      const x = (i + 1) * (canvas.width / (allNodes.length + 1));
+      const y = isHazard ? canvas.height * 0.3 : canvas.height * 0.7;
+      const radius = isHazard
+        ? feature.properties.severity * 20 + 10
+        : Math.min(feature.properties.population / 10000, 15) + 5;
+
+      const dx = clickX - x;
+      const dy = clickY - y;
+      const distance = Math.sqrt(dx * dx + dy * dy);
+      
+      if (distance < radius + 5) {
+        setSelectedNode({
+          id: feature.properties.id,
+          type: isHazard ? 'hazard' : 'community',
+          properties: feature.properties,
+          x: x / scaleX,
+          y: y / scaleY
+        });
+        return;
+      }
+    }
+
+    setSelectedNode(null);
+  }, [equityLensActive, timePeriod]);
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+
+    canvas.addEventListener('click', handleCanvasClick);
+    return () => canvas.removeEventListener('click', handleCanvasClick);
+  }, [handleCanvasClick]);
+
   useEffect(() => {
     if (!canvasRef.current) return;
 
@@ -65,7 +146,6 @@ const Atlas: React.FC = () => {
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
-    // Set canvas size
     const resizeCanvas = () => {
       const rect = canvas.getBoundingClientRect();
       canvas.width = rect.width * window.devicePixelRatio;
@@ -78,7 +158,6 @@ const Atlas: React.FC = () => {
     resizeCanvas();
     window.addEventListener('resize', resizeCanvas);
 
-    // Animation loop
     const animate = () => {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       
@@ -86,6 +165,14 @@ const Atlas: React.FC = () => {
         drawNetworkGraph(ctx, canvas);
       } else {
         drawStandardMap(ctx, canvas);
+      }
+      
+      if (selectedNode && !equityLensActive) {
+        ctx.strokeStyle = '#00ffff';
+        ctx.lineWidth = 3;
+        ctx.beginPath();
+        ctx.arc(selectedNode.x, selectedNode.y, 30, 0, Math.PI * 2);
+        ctx.stroke();
       }
       
       if (isPlaying) {
@@ -101,23 +188,20 @@ const Atlas: React.FC = () => {
         cancelAnimationFrame(animationRef.current);
       }
     };
-  }, [equityLensActive, isPlaying, visibleLayers, timePeriod]);
+  }, [equityLensActive, isPlaying, visibleLayers, timePeriod, selectedNode]);
 
   const drawStandardMap = (ctx: CanvasRenderingContext2D, canvas: HTMLCanvasElement) => {
-    const width = canvas.clientWidth;
-    const height = canvas.clientHeight;
+    const width = canvas.width;
+    const height = canvas.height;
 
-    // Draw background grid
     ctx.strokeStyle = 'rgba(0, 212, 255, 0.1)';
     ctx.lineWidth = 1;
-    
     for (let x = 0; x < width; x += 50) {
       ctx.beginPath();
       ctx.moveTo(x, 0);
       ctx.lineTo(x, height);
       ctx.stroke();
     }
-    
     for (let y = 0; y < height; y += 50) {
       ctx.beginPath();
       ctx.moveTo(0, y);
@@ -125,107 +209,75 @@ const Atlas: React.FC = () => {
       ctx.stroke();
     }
 
-    // Draw hazard nodes
-    hazardData.features.forEach((feature, index) => {
-      if (!visibleLayers[feature.properties.type as keyof typeof visibleLayers]) return;
-      
-      const x = (index + 1) * (width / (hazardData.features.length + 1));
+    const filteredHazards = getFilteredHazards();
+
+    filteredHazards.forEach((feature, index) => {
+      if (!visibleLayers[feature.properties.type as keyof VisibleLayers]) return;
+
+      const x = (index + 1) * (width / (filteredHazards.length + 1));
       const y = height * 0.3;
       const radius = feature.properties.severity * 20 + 10;
-      
-      // Glow effect
+
       const gradient = ctx.createRadialGradient(x, y, 0, x, y, radius * 2);
       gradient.addColorStop(0, getHazardColor(feature.properties.type, 0.8));
       gradient.addColorStop(1, getHazardColor(feature.properties.type, 0));
-      
+
       ctx.fillStyle = gradient;
       ctx.beginPath();
       ctx.arc(x, y, radius * 2, 0, Math.PI * 2);
       ctx.fill();
-      
-      // Core node
+
       ctx.fillStyle = getHazardColor(feature.properties.type, 1);
       ctx.beginPath();
       ctx.arc(x, y, radius, 0, Math.PI * 2);
       ctx.fill();
-      
-      // Label
+
       ctx.fillStyle = '#ffffff';
       ctx.font = '12px Orbitron';
       ctx.textAlign = 'center';
       ctx.fillText(feature.properties.type.toUpperCase(), x, y + radius + 20);
     });
 
-    // Draw community nodes
     if (visibleLayers.communities) {
       communityData.features.forEach((feature, index) => {
         const x = (index + 1) * (width / (communityData.features.length + 1));
         const y = height * 0.7;
         const radius = Math.min(feature.properties.population / 10000, 15) + 5;
-        
-        // Vulnerability color
-        const vulnColor = getVulnerabilityColor(feature.properties.vulnerabilityIndex);
-        
-        ctx.fillStyle = vulnColor;
+
+        ctx.fillStyle = getVulnerabilityColor(feature.properties.vulnerabilityIndex);
         ctx.beginPath();
         ctx.arc(x, y, radius, 0, Math.PI * 2);
         ctx.fill();
-        
-        // Border
-        ctx.strokeStyle = '#ffffff';
-        ctx.lineWidth = 2;
-        ctx.stroke();
-        
-        // Label
-        ctx.fillStyle = '#ffffff';
-        ctx.font = '10px Orbitron';
-        ctx.textAlign = 'center';
-        ctx.fillText(feature.properties.name.split(' ')[0], x, y + radius + 15);
-      });
-    }
 
-    // Draw connections
-    if (visibleLayers.connections) {
-      ctx.strokeStyle = 'rgba(0, 212, 255, 0.6)';
-      ctx.lineWidth = 2;
-      ctx.setLineDash([10, 5]);
-      
-      for (let i = 0; i < Math.min(hazardData.features.length, communityData.features.length); i++) {
-        const hazardX = (i + 1) * (width / (hazardData.features.length + 1));
-        const hazardY = height * 0.3;
-        const communityX = (i + 1) * (width / (communityData.features.length + 1));
-        const communityY = height * 0.7;
-        
-        ctx.beginPath();
-        ctx.moveTo(hazardX, hazardY);
-        ctx.lineTo(communityX, communityY);
-        ctx.stroke();
-      }
+        ctx.fillStyle = '#ffffff';
+        ctx.font = '12px Orbitron';
+        ctx.textAlign = 'center';
+        ctx.fillText(feature.properties.name, x, y + radius + 20);
+      });
     }
   };
 
   const drawNetworkGraph = (ctx: CanvasRenderingContext2D, canvas: HTMLCanvasElement) => {
-    const width = canvas.clientWidth;
-    const height = canvas.clientHeight;
+    const width = canvas.width;
+    const height = canvas.height;
     const time = Date.now() * 0.001;
 
-    // Dark background
     ctx.fillStyle = 'rgba(10, 10, 18, 0.9)';
     ctx.fillRect(0, 0, width, height);
 
-    // Generate network layout
     const nodes: Node[] = [];
     const links: Link[] = [];
 
-    // Add hazard nodes
-    hazardData.features.forEach((feature, index) => {
-      if (!visibleLayers[feature.properties.type as keyof typeof visibleLayers]) return;
-      
-      const angle = (index / hazardData.features.length) * Math.PI * 2;
+    const filteredHazards = getFilteredHazards();
+
+    filteredHazards.forEach((feature, index) => {
+      if (!visibleLayers[feature.properties.type as keyof VisibleLayers]) return;
+
+      const angle = (index / filteredHazards.length) * Math.PI * 2;
       const radius = Math.min(width, height) * 0.25;
       const centerX = width / 2;
       const centerY = height / 2;
-      
+
       const node: Node = {
         id: feature.properties.id,
         type: 'hazard',
@@ -236,14 +288,13 @@ const Atlas: React.FC = () => {
       nodes.push(node);
     });
 
-    // Add community nodes
     if (visibleLayers.communities) {
       communityData.features.forEach((feature, index) => {
-        const angle = (index / communityData.features.length) * Math.PI * 2 + Math.PI;
-        const radius = Math.min(width, height) * 0.35;
+        const angle = (index / communityData.features.length) * Math.PI * 2;
+        const radius = Math.min(width, height) * 0.15;
         const centerX = width / 2;
         const centerY = height / 2;
-        
+
         const node: Node = {
           id: feature.properties.id,
           type: 'community',
@@ -255,96 +306,62 @@ const Atlas: React.FC = () => {
       });
     }
 
-    // Generate links
-    const hazardNodes = nodes.filter(n => n.type === 'hazard');
-    const communityNodes = nodes.filter(n => n.type === 'community');
-
-    hazardNodes.forEach(hazard => {
-      communityNodes.forEach(community => {
-        const distance = Math.sqrt(
-          Math.pow(hazard.x - community.x, 2) + 
-          Math.pow(hazard.y - community.y, 2)
-        );
-        
-        if (distance < 200) {
-          links.push({
-            source: hazard,
-            target: community,
-            weight: (300 - distance) / 300,
-            type: hazard.properties.type
+    if (visibleLayers.connections) {
+      nodes.forEach(source => {
+        if (source.type === 'hazard') {
+          nodes.forEach(target => {
+            if (target.type === 'community') {
+              const dx = source.x - target.x;
+              const dy = source.y - target.y;
+              const distance = Math.sqrt(dx * dx + dy * dy);
+              
+              if (distance < Math.min(width, height) * 0.4) {
+                links.push({
+                  source,
+                  target,
+                  weight: 1 - (distance / (Math.min(width, height) * 0.4)),
+                  type: source.properties.type
+                });
+              }
+            }
           });
         }
       });
-    });
-
-    // Draw links
-    if (visibleLayers.connections) {
-      links.forEach(link => {
-        const opacity = 0.3 + link.weight * 0.7;
-        ctx.strokeStyle = getHazardColor(link.type, opacity);
-        ctx.lineWidth = link.weight * 4;
-        ctx.setLineDash([5, 5]);
-        
-        ctx.beginPath();
-        ctx.moveTo(link.source.x, link.source.y);
-        ctx.lineTo(link.target.x, link.target.y);
-        ctx.stroke();
-        
-        // Animated particles along the link
-        const t = (time * simulationSpeed) % 1;
-        const particleX = link.source.x + (link.target.x - link.source.x) * t;
-        const particleY = link.source.y + (link.target.y - link.source.y) * t;
-        
-        ctx.fillStyle = getHazardColor(link.type, 1);
-        ctx.beginPath();
-        ctx.arc(particleX, particleY, 3, 0, Math.PI * 2);
-        ctx.fill();
-      });
     }
 
-    // Draw nodes
-    nodes.forEach(node => {
-      const radius = node.type === 'hazard' ? 
-        (node.properties.severity * 15 + 10) : 
-        (Math.min(node.properties.population / 15000, 12) + 8);
-      
-      const color = node.type === 'hazard' ? 
-        getHazardColor(node.properties.type, 1) : 
-        getVulnerabilityColor(node.properties.vulnerabilityIndex);
-      
-      // Glow effect
-      const gradient = ctx.createRadialGradient(node.x, node.y, 0, node.x, node.y, radius * 3);
-      gradient.addColorStop(0, color);
-      gradient.addColorStop(1, 'transparent');
-      
-      ctx.fillStyle = gradient;
+    links.forEach(link => {
       ctx.beginPath();
-      ctx.arc(node.x, node.y, radius * 3, 0, Math.PI * 2);
-      ctx.fill();
-      
-      // Core node
-      ctx.fillStyle = color;
-      ctx.beginPath();
-      ctx.arc(node.x, node.y, radius, 0, Math.PI * 2);
-      ctx.fill();
-      
-      // Border
-      ctx.strokeStyle = '#ffffff';
-      ctx.lineWidth = 2;
+      ctx.moveTo(link.source.x, link.source.y);
+      ctx.lineTo(link.target.x, link.target.y);
+      ctx.strokeStyle = getHazardColor(link.type, 0.3 * link.weight);
+      ctx.lineWidth = 2 * link.weight;
       ctx.stroke();
-      
-      // Label
-      ctx.fillStyle = '#ffffff';
-      ctx.font = '10px Orbitron';
-      ctx.textAlign = 'center';
-      ctx.shadowColor = 'rgba(0,0,0,0.8)';
-      ctx.shadowBlur = 4;
-      ctx.fillText(
-        node.properties.name || node.properties.type, 
-        node.x, 
-        node.y + radius + 15
-      );
-      ctx.shadowBlur = 0;
+    });
+
+    nodes.forEach(node => {
+      if (node.type === 'hazard') {
+        const radius = node.properties.severity * 15 + 5;
+        
+        const gradient = ctx.createRadialGradient(node.x, node.y, 0, node.x, node.y, radius * 2);
+        gradient.addColorStop(0, getHazardColor(node.properties.type, 0.8));
+        gradient.addColorStop(1, getHazardColor(node.properties.type, 0));
+        
+        ctx.fillStyle = gradient;
+        ctx.beginPath();
+        ctx.arc(node.x, node.y, radius * 2, 0, Math.PI * 2);
+        ctx.fill();
+        
+        ctx.fillStyle = getHazardColor(node.properties.type, 1);
+        ctx.beginPath();
+        ctx.arc(node.x, node.y, radius, 0, Math.PI * 2);
+        ctx.fill();
+      } else {
+        const radius = node.properties.population / 15000;
+        ctx.fillStyle = getVulnerabilityColor(node.properties.vulnerabilityIndex);
+        ctx.beginPath();
+        ctx.arc(node.x, node.y, radius, 0, Math.PI * 2);
+        ctx.fill();
+      }
     });
   };
 
@@ -364,7 +381,7 @@ const Atlas: React.FC = () => {
     return `rgb(${r}, ${g}, 0)`;
   };
 
-  const toggleLayer = (layerName: keyof typeof visibleLayers) => {
+  const toggleLayer = (layerName: keyof VisibleLayers) => {
     setVisibleLayers(prev => ({
       ...prev,
       [layerName]: !prev[layerName]
@@ -375,291 +392,418 @@ const Atlas: React.FC = () => {
     setIsPlaying(!isPlaying);
   };
 
+  const formatNumber = (num: number): string => {
+    if (num >= 1000000) {
+      return (num / 1000000).toFixed(1) + 'M';
+    } else if (num >= 1000) {
+      return (num / 1000).toFixed(1) + 'K';
+    }
+    return num.toString();
+  };
+
   return (
-    <div className="relative w-full h-full bg-base-100">
+    <div className="relative w-full h-full bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 overflow-hidden">
       
       {/* Canvas Container */}
       <canvas
         ref={canvasRef}
         className="w-full h-full block"
-        style={{ background: 'linear-gradient(145deg, hsl(224 71% 4%), hsl(240 38% 6%))' }}
       />
       
-      {/* UI Controls */}
-<div className="absolute top-4 right-4 z-20 flex flex-col gap-4">
-  {/* Equity Lens Toggle */}
-  <motion.button
-    initial={{ opacity: 0, x: 20 }}
-    animate={{ opacity: 1, x: 0 }}
-    className={`rounded-full shadow-lg px-5 py-2 flex items-center gap-2 transition-all duration-300 ${
-      equityLensActive 
-        ? 'bg-indigo-600 text-white ring-2 ring-indigo-300 hover:bg-indigo-700' 
-        : 'bg-white/10 text-white border border-white/20 backdrop-blur-md hover:bg-white/20'
-    }`}
-    onClick={() => setEquityLensActive(!equityLensActive)}
-  >
-    <FiEye className="mr-1" />
-    {equityLensActive ? 'Map View' : 'Equity Lens'}
-  </motion.button>
-
-  {/* Time Travel Slider */}
-  <motion.div 
-    initial={{ opacity: 0, x: 20 }}
-    animate={{ opacity: 1, x: 0 }}
-    transition={{ delay: 0.1 }}
-    className="rounded-2xl p-4 w-64 bg-white/10 backdrop-blur-xl border border-white/20 shadow-xl"
-  >
-    <div className="flex items-center mb-2 text-indigo-300">
-      <FiClock className="mr-2" />
-      <span className="font-bold">Time Travel</span>
-    </div>
-    <div className="flex justify-between text-xs mb-2 text-white/70">
-      <span>Past</span>
-      <span>Present</span>
-      <span>Future</span>
-    </div>
-    <input
-      type="range"
-      min="0"
-      max="2"
-      value={['past', 'present', 'future'].indexOf(timePeriod)}
-      onChange={(e) => setTimePeriod(['past', 'present', 'future'][parseInt(e.target.value)])}
-      className="w-full h-2 bg-indigo-500/30 rounded-lg appearance-none cursor-pointer accent-indigo-500"
-    />
-  </motion.div>
-
-  {/* Layer Controls */}
-  <motion.div 
-    initial={{ opacity: 0, x: 20 }}
-    animate={{ opacity: 1, x: 0 }}
-    transition={{ delay: 0.2 }}
-    className="rounded-2xl p-4 w-64 bg-white/10 backdrop-blur-xl border border-white/20 shadow-xl"
-  >
-    <div className="flex items-center mb-2 text-indigo-300">
-      <FiLayers className="mr-2" />
-      <span className="font-bold">Layers</span>
-    </div>
-    <div className="flex flex-col gap-2 text-white/90">
-      <label className="cursor-pointer flex items-center hover:text-indigo-200 transition">
-        <input
-          type="checkbox"
-          checked={visibleLayers.heat}
-          onChange={() => toggleLayer('heat')}
-          className="mr-2 accent-indigo-400"
-        />
-        <FiAlertTriangle className="text-orange-400 mr-1" />
-        <span className="text-sm">Heat Hazards</span>
-      </label>
-      <label className="cursor-pointer flex items-center hover:text-indigo-200 transition">
-        <input
-          type="checkbox"
-          checked={visibleLayers.flood}
-          onChange={() => toggleLayer('flood')}
-          className="mr-2 accent-indigo-400"
-        />
-        <FiAlertTriangle className="text-blue-400 mr-1" />
-        <span className="text-sm">Flood Hazards</span>
-      </label>
-      <label className="cursor-pointer flex items-center hover:text-indigo-200 transition">
-        <input
-          type="checkbox"
-          checked={visibleLayers.fire}
-          onChange={() => toggleLayer('fire')}
-          className="mr-2 accent-indigo-400"
-        />
-        <FiAlertTriangle className="text-red-400 mr-1" />
-        <span className="text-sm">Fire Hazards</span>
-      </label>
-      <label className="cursor-pointer flex items-center hover:text-indigo-200 transition">
-        <input
-          type="checkbox"
-          checked={visibleLayers.air}
-          onChange={() => toggleLayer('air')}
-          className="mr-2 accent-indigo-400"
-        />
-        <FiAlertTriangle className="text-gray-400 mr-1" />
-        <span className="text-sm">Air Hazards</span>
-      </label>
-      <label className="cursor-pointer flex items-center hover:text-indigo-200 transition">
-        <input
-          type="checkbox"
-          checked={visibleLayers.communities}
-          onChange={() => toggleLayer('communities')}
-          className="mr-2 accent-indigo-400"
-        />
-        <FiHome className="text-green-400 mr-1" />
-        <span className="text-sm">Communities</span>
-      </label>
-      <label className="cursor-pointer flex items-center hover:text-indigo-200 transition">
-        <input
-          type="checkbox"
-          checked={visibleLayers.connections}
-          onChange={() => toggleLayer('connections')}
-          className="mr-2 accent-indigo-400"
-        />
-        <FiGlobe className="text-purple-400 mr-1" />
-        <span className="text-sm">Connections</span>
-      </label>
-    </div>
-  </motion.div>
-
-  {/* Simulation Controls */}
-  {equityLensActive && (
-    <motion.div 
-      initial={{ opacity: 0, x: 20 }}
-      animate={{ opacity: 1, x: 0 }}
-      transition={{ delay: 0.3 }}
-      className="rounded-2xl p-4 w-64 bg-white/10 backdrop-blur-xl border border-white/20 shadow-xl"
-    >
-      <div className="flex items-center mb-2 text-indigo-300">
-        <FiPlay className="mr-2" />
-        <span className="font-bold">Simulation</span>
-      </div>
-      <div className="flex items-center justify-between mb-2">
-        <button 
-          className={`px-3 py-1 rounded-lg flex items-center gap-2 transition ${
-            isPlaying 
-              ? 'bg-indigo-600 text-white shadow-md' 
-              : 'bg-white/10 text-white hover:bg-white/20'
+      {/* UI Controls - Fixed positioning and width */}
+      <div className="absolute top-4 right-4 z-20 flex flex-col gap-3 w-72">
+        {/* Main View Toggle */}
+        <motion.button
+          initial={{ opacity: 0, x: 20 }}
+          animate={{ opacity: 1, x: 0 }}
+          className={`rounded-xl shadow-lg px-5 py-3 flex items-center gap-2 transition-all duration-300 ${
+            equityLensActive 
+              ? 'bg-indigo-600 text-white ring-2 ring-indigo-300 hover:bg-indigo-700' 
+              : 'bg-white/10 text-white border border-white/20 backdrop-blur-md hover:bg-white/20'
           }`}
-          onClick={togglePlayPause}
+          onClick={() => setEquityLensActive(!equityLensActive)}
         >
-          {isPlaying ? <FiPause /> : <FiPlay />}
-          {isPlaying ? 'Pause' : 'Play'}
-        </button>
-        <div className="flex gap-2">
-          {[0.5, 1, 2].map(speed => (
-            <button
-              key={speed}
-              className={`px-2 py-1 rounded-md transition ${
-                simulationSpeed === speed
-                  ? 'bg-indigo-600 text-white shadow-md'
-                  : 'bg-white/10 text-white hover:bg-white/20'
-              }`}
-              onClick={() => setSimulationSpeed(speed)}
-            >
-              {speed}x
-            </button>
-          ))}
-        </div>
-      </div>
-    </motion.div>
-  )}
-</div>
+          <FiEye className="text-lg" />
+          <span className="font-medium">{equityLensActive ? 'Map View' : 'Equity Lens'}</span>
+        </motion.button>
 
-      
-     {/* Legend */}
-<motion.div 
-  initial={{ opacity: 0, y: 20 }}
-  animate={{ opacity: 1, y: 0 }}
-  transition={{ duration: 0.4 }}
-  className="absolute bottom-4 left-4 z-[1000] rounded-2xl p-5 w-60 bg-white/10 backdrop-blur-xl border border-white/20 shadow-xl"
->
-  <div className="flex items-center mb-3 text-indigo-300">
-    <FiGlobe className="mr-2" />
-    <span className="font-bold tracking-wide">Legend</span>
-  </div>
-
-  <div className="space-y-3 text-white/90">
-    <div className="flex items-center">
-      <div className="w-4 h-4 rounded-full bg-orange-500 shadow-md shadow-orange-500/60 mr-2"></div>
-      <span className="text-sm">Heat Hazard</span>
-    </div>
-    <div className="flex items-center">
-      <div className="w-4 h-4 rounded-full bg-blue-500 shadow-md shadow-blue-500/60 mr-2"></div>
-      <span className="text-sm">Flood Hazard</span>
-    </div>
-    <div className="flex items-center">
-      <div className="w-4 h-4 rounded-full bg-red-500 shadow-md shadow-red-500/60 mr-2"></div>
-      <span className="text-sm">Fire Hazard</span>
-    </div>
-    <div className="flex items-center">
-      <div className="w-4 h-4 rounded-full bg-gray-400 shadow-md shadow-gray-400/50 mr-2"></div>
-      <span className="text-sm">Air Hazard</span>
-    </div>
-    <div className="flex items-center">
-      <div className="w-4 h-4 rounded-full bg-gradient-to-r from-green-500 to-red-500 shadow-md shadow-green-500/40 mr-2"></div>
-      <span className="text-sm">Community Vulnerability</span>
-    </div>
-  </div>
-</motion.div>
-
-
-      {/* Info Panel */}
-      {selectedNode && (
+        {/* Collapsible Controls Container */}
         <motion.div 
-          initial={{ opacity: 0, scale: 0.9 }}
-          animate={{ opacity: 1, scale: 1 }}
-          className="absolute top-4 left-4 z-[1000] command-panel rounded-lg p-4 w-80"
+          initial={{ opacity: 0, x: 20 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ delay: 0.1 }}
+          className="rounded-2xl bg-white/10 backdrop-blur-xl border border-white/20 shadow-xl overflow-hidden"
         >
-          <div className="flex justify-between items-center mb-2">
-            <h3 className="font-bold text-lg text-primary">
-              {selectedNode.type === 'hazard' ? 'Hazard Details' : 'Community Details'}
-            </h3>
-            <button 
-              onClick={() => setSelectedNode(null)} 
-              className="text-lg text-muted-foreground hover:text-primary"
-            >
-              ×
-            </button>
+          {/* Time Controls Header */}
+          <div 
+            className="flex items-center justify-between p-4 cursor-pointer hover:bg-white/5 transition"
+            onClick={() => setShowTimeControls(!showTimeControls)}
+          >
+            <div className="flex items-center text-indigo-300">
+              <FiClock className="mr-2 text-lg" />
+              <span className="font-medium">Time Travel</span>
+            </div>
+            {showTimeControls ? <FiChevronDown /> : <FiChevronRight />}
           </div>
-          {selectedNode.type === 'hazard' ? (
-            <>
-              <p className="text-sm"><strong>Type:</strong> {selectedNode.properties.type}</p>
-              <p className="text-sm"><strong>Severity:</strong> {Math.round(selectedNode.properties.severity * 100)}%</p>
-              <p className="text-sm"><strong>Name:</strong> {selectedNode.properties.name}</p>
-            </>
-          ) : (
-            <>
-              <p className="text-sm"><strong>Name:</strong> {selectedNode.properties.name}</p>
-              <p className="text-sm"><strong>Population:</strong> {selectedNode.properties.population.toLocaleString()}</p>
-              <p className="text-sm"><strong>Vulnerability:</strong> {Math.round(selectedNode.properties.vulnerabilityIndex * 100)}%</p>
-            </>
+          
+          {showTimeControls && (
+            <motion.div 
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: 'auto' }}
+              exit={{ opacity: 0, height: 0 }}
+              className="px-4 pb-4"
+            >
+              <div className="flex justify-between text-xs mb-2 text-white/70">
+                <span>Past</span>
+                <span>Present</span>
+                <span>Future</span>
+              </div>
+              <input
+                type="range"
+                min="0"
+                max="2"
+                value={['past', 'present', 'future'].indexOf(timePeriod)}
+                onChange={(e) => setTimePeriod(['past', 'present', 'future'][parseInt(e.target.value)])}
+                className="w-full h-2 bg-indigo-500/30 rounded-lg appearance-none cursor-pointer accent-indigo-500"
+              />
+            </motion.div>
           )}
         </motion.div>
-      )}
+
+        {/* Layer Controls */}
+        <motion.div 
+          initial={{ opacity: 0, x: 20 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ delay: 0.2 }}
+          className="rounded-2xl bg-white/10 backdrop-blur-xl border border-white/20 shadow-xl overflow-hidden"
+        >
+          <div 
+            className="flex items-center justify-between p-4 cursor-pointer hover:bg-white/5 transition"
+            onClick={() => setShowLayerControls(!showLayerControls)}
+          >
+            <div className="flex items-center text-indigo-300">
+              <FiLayers className="mr-2 text-lg" />
+              <span className="font-medium">Layers</span>
+            </div>
+            {showLayerControls ? <FiChevronDown /> : <FiChevronRight />}
+          </div>
+          
+          {showLayerControls && (
+            <motion.div 
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: 'auto' }}
+              exit={{ opacity: 0, height: 0 }}
+              className="px-4 pb-4"
+            >
+              <div className="flex flex-col gap-3 text-white/90">
+                <label className="cursor-pointer flex items-center hover:text-indigo-200 transition">
+                  <input
+                    type="checkbox"
+                    checked={visibleLayers.heat}
+                    onChange={() => toggleLayer('heat')}
+                    className="mr-3 accent-orange-400 w-4 h-4"
+                  />
+                  <div className="w-3 h-3 rounded-full bg-orange-500 mr-2"></div>
+                  <span className="text-sm">Heat Hazards</span>
+                </label>
+                <label className="cursor-pointer flex items-center hover:text-indigo-200 transition">
+                  <input
+                    type="checkbox"
+                    checked={visibleLayers.flood}
+                    onChange={() => toggleLayer('flood')}
+                    className="mr-3 accent-blue-400 w-4 h-4"
+                  />
+                  <div className="w-3 h-3 rounded-full bg-blue-500 mr-2"></div>
+                  <span className="text-sm">Flood Hazards</span>
+                </label>
+                <label className="cursor-pointer flex items-center hover:text-indigo-200 transition">
+                  <input
+                    type="checkbox"
+                    checked={visibleLayers.fire}
+                    onChange={() => toggleLayer('fire')}
+                    className="mr-3 accent-red-400 w-4 h-4"
+                  />
+                  <div className="w-3 h-3 rounded-full bg-red-500 mr-2"></div>
+                  <span className="text-sm">Fire Hazards</span>
+                </label>
+                <label className="cursor-pointer flex items-center hover:text-indigo-200 transition">
+                  <input
+                    type="checkbox"
+                    checked={visibleLayers.air}
+                    onChange={() => toggleLayer('air')}
+                    className="mr-3 accent-gray-400 w-4 h-4"
+                  />
+                  <div className="w-3 h-3 rounded-full bg-gray-400 mr-2"></div>
+                  <span className="text-sm">Air Hazards</span>
+                </label>
+                <label className="cursor-pointer flex items-center hover:text-indigo-200 transition">
+                  <input
+                    type="checkbox"
+                    checked={visibleLayers.communities}
+                    onChange={() => toggleLayer('communities')}
+                    className="mr-3 accent-green-400 w-4 h-4"
+                  />
+                  <FiHome className="text-green-400 mr-2" />
+                  <span className="text-sm">Communities</span>
+                </label>
+                <label className="cursor-pointer flex items-center hover:text-indigo-200 transition">
+                  <input
+                    type="checkbox"
+                    checked={visibleLayers.connections}
+                    onChange={() => toggleLayer('connections')}
+                    className="mr-3 accent-purple-400 w-4 h-4"
+                  />
+                  <FiGlobe className="text-purple-400 mr-2" />
+                  <span className="text-sm">Connections</span>
+                </label>
+              </div>
+            </motion.div>
+          )}
+        </motion.div>
+
+        {/* Simulation Controls - Fixed to always be centered */}
+        {equityLensActive && (
+          <motion.div 
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: 0.3 }}
+            className="rounded-2xl bg-white/10 backdrop-blur-xl border border-white/20 shadow-xl overflow-hidden w-full"
+          >
+            <div 
+              className="flex items-center justify-between p-4 cursor-pointer hover:bg-white/5 transition"
+              onClick={() => setShowSimulationControls(!showSimulationControls)}
+            >
+              <div className="flex items-center text-indigo-300">
+                <FiPlay className="mr-2 text-lg" />
+                <span className="font-medium">Simulation</span>
+              </div>
+              {showSimulationControls ? <FiChevronDown /> : <FiChevronRight />}
+            </div>
+            
+            {showSimulationControls && (
+              <motion.div 
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: 'auto' }}
+                exit={{ opacity: 0, height: 0 }}
+                className="px-4 pb-4"
+              >
+                <div className="flex flex-col gap-3">
+                  <button 
+                    className={`w-full py-2 rounded-lg flex items-center justify-center gap-2 transition ${
+                      isPlaying 
+                        ? 'bg-indigo-600 text-white shadow-md' 
+                        : 'bg-white/10 text-white hover:bg-white/20'
+                    }`}
+                    onClick={togglePlayPause}
+                  >
+                    {isPlaying ? <FiPause /> : <FiPlay />}
+                    {isPlaying ? 'Pause Simulation' : 'Start Simulation'}
+                  </button>
+                  <div className="flex justify-between items-center">
+                    <span className="text-white/70 text-sm">Speed:</span>
+                    <div className="flex gap-2">
+                      {[0.5, 1, 2].map(speed => (
+                        <button
+                          key={speed}
+                          className={`px-3 py-1 rounded-md transition ${
+                            simulationSpeed === speed
+                              ? 'bg-indigo-600 text-white shadow-md'
+                              : 'bg-white/10 text-white hover:bg-white/20'
+                          }`}
+                          onClick={() => setSimulationSpeed(speed)}
+                        >
+                          {speed}x
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </motion.div>
+            )}
+          </motion.div>
+        )}
+      </div>
+
+      {/* Legend */}
+      <motion.div 
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.4 }}
+        className="absolute bottom-4 left-4 z-[1000] rounded-2xl p-5 w-60 bg-white/10 backdrop-blur-xl border border-white/20 shadow-xl"
+      >
+        <div className="flex items-center mb-3 text-indigo-300">
+          <FiGlobe className="mr-2 text-lg" />
+          <span className="font-bold tracking-wide">Legend</span>
+        </div>
+
+        <div className="space-y-3 text-white/90">
+          <div className="flex items-center">
+            <div className="w-4 h-4 rounded-full bg-orange-500 shadow-md shadow-orange-500/60 mr-3"></div>
+            <span className="text-sm">Heat Hazard</span>
+          </div>
+          <div className="flex items-center">
+            <div className="w-4 h-4 rounded-full bg-blue-500 shadow-md shadow-blue-500/60 mr-3"></div>
+            <span className="text-sm">Flood Hazard</span>
+          </div>
+          <div className="flex items-center">
+            <div className="w-4 h-4 rounded-full bg-red-500 shadow-md shadow-red-500/60 mr-3"></div>
+            <span className="text-sm">Fire Hazard</span>
+          </div>
+          <div className="flex items-center">
+            <div className="w-4 h-4 rounded-full bg-gray-400 shadow-md shadow-gray-400/50 mr-3"></div>
+            <span className="text-sm">Air Hazard</span>
+          </div>
+          <div className="flex items-center">
+            <div className="w-4 h-4 rounded-full bg-gradient-to-r from-green-500 to-red-500 shadow-md shadow-green-500/40 mr-3"></div>
+            <span className="text-sm">Community Vulnerability</span>
+          </div>
+        </div>
+      </motion.div>
+
+      {/* Selected Node Info Panel */}
+      <AnimatePresence>
+        {selectedNode && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 20 }}
+            transition={{ duration: 0.3 }}
+            className="absolute top-20 left-4 z-[1000] bg-white/10 backdrop-blur-xl border border-white/20 shadow-xl rounded-xl p-5 w-80"
+          >
+            <div className="flex justify-between items-center mb-4">
+              <div className="text-indigo-300 font-bold text-lg">
+                {selectedNode.properties.name}
+              </div>
+              <button 
+                onClick={() => setSelectedNode(null)} 
+                className="text-white/70 hover:text-white transition-colors p-1 rounded-full hover:bg-white/10"
+              >
+                <FiX size={20} />
+              </button>
+            </div>
+            <div className="text-white/80 text-sm space-y-3">
+              {selectedNode.type === 'hazard' ? (
+                <>
+                  <div className="flex justify-between items-center py-2 border-b border-white/10">
+                    <span className="font-medium">Type:</span>
+                    <span className="font-medium capitalize px-3 py-1 rounded-full bg-white/10">
+                      {selectedNode.properties.type}
+                    </span>
+                  </div>
+                  <div className="flex justify-between items-center py-2 border-b border-white/10">
+                    <span className="font-medium">Severity:</span>
+                    <div className="w-24 bg-white/10 rounded-full h-2">
+                      <div 
+                        className="bg-red-500 h-2 rounded-full" 
+                        style={{ width: `${selectedNode.properties.severity * 100}%` }}
+                      ></div>
+                    </div>
+                    <span className="font-medium w-10 text-right">{(selectedNode.properties.severity * 100).toFixed(0)}%</span>
+                  </div>
+                  <div className="flex justify-between items-center py-2">
+                    <span className="font-medium">Detected:</span>
+                    <span className="font-medium">{new Date(selectedNode.properties.timestamp).toLocaleDateString()}</span>
+                  </div>
+                </>
+              ) : (
+                <>
+                  <div className="flex justify-between items-center py-2 border-b border-white/10">
+                    <span className="font-medium">Population:</span>
+                    <span className="font-medium">{formatNumber(selectedNode.properties.population)}</span>
+                  </div>
+                  <div className="flex justify-between items-center py-2">
+                    <span className="font-medium">Vulnerability:</span>
+                    <div className="w-24 bg-white/10 rounded-full h-2">
+                      <div 
+                        className="bg-gradient-to-r from-green-500 to-red-500 h-2 rounded-full" 
+                        style={{ width: `${selectedNode.properties.vulnerabilityIndex * 100}%` }}
+                      ></div>
+                    </div>
+                    <span className="font-medium w-10 text-right">{(selectedNode.properties.vulnerabilityIndex * 100).toFixed(0)}%</span>
+                  </div>
+                </>
+              )}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Tutorial Overlay */}
-{showTutorial && (
-  <motion.div 
-    initial={{ opacity: 0 }}
-    animate={{ opacity: 1 }}
-    className="absolute inset-0 z-20 bg-gradient-to-br from-black/70 via-black/60 to-black/70 backdrop-blur-sm flex items-center justify-center"
-  >
-    <motion.div 
-      initial={{ opacity: 0, scale: 0.85 }}
-      animate={{ opacity: 1, scale: 1 }}
-      transition={{ duration: 0.4 }}
-      className="rounded-2xl p-8 w-96 max-w-[90vw] bg-white/10 border border-white/20 shadow-2xl backdrop-blur-xl"
-    >
-      <h2 className="text-2xl font-bold mb-5 text-center text-indigo-300 tracking-wide drop-shadow-lg">
-        Welcome to Atlas
-      </h2>
-      <div className="space-y-3 mb-6 text-white/90">
-        <p className="text-sm">This interactive visualization shows environmental hazards and their impact on vulnerable communities.</p>
-        <p className="text-sm">• Use the <strong className="text-indigo-300">Equity Lens</strong> to see network connections</p>
-        <p className="text-sm">• Toggle different <strong className="text-indigo-300">layers</strong> to focus on specific data</p>
-        <p className="text-sm">• Use the <strong className="text-indigo-300">time slider</strong> to explore scenarios</p>
-        <p className="text-sm">• Click elements for detailed information</p>
-      </div>
-      <button 
-        className="btn w-full bg-indigo-500 hover:bg-indigo-600 text-white font-semibold rounded-xl shadow-md transition"
-        onClick={() => setShowTutorial(false)}
-      >
-        Get Started
-      </button>
-    </motion.div>
-  </motion.div>
-)}
-
+      <AnimatePresence>
+        {showTutorial && (
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="absolute inset-0 z-20 bg-gradient-to-br from-black/80 via-black/70 to-black/80 backdrop-blur-sm flex items-center justify-center p-4"
+          >
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.9 }}
+              transition={{ duration: 0.4 }}
+              className="rounded-2xl p-8 w-full max-w-2xl bg-white/10 border border-white/20 shadow-2xl backdrop-blur-xl"
+            >
+              <h2 className="text-3xl font-bold mb-6 text-center text-indigo-300 tracking-wide drop-shadow-lg">
+                Welcome to Atlas
+              </h2>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8 text-white/90">
+                <div className="flex items-start">
+                  <div className="bg-indigo-500/20 p-3 rounded-lg mr-4">
+                    <FiEye className="text-indigo-300 text-xl" />
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-indigo-300 mb-1">View Modes</h3>
+                    <p className="text-sm">Switch between Map View and Equity Lens to see different perspectives of the data.</p>
+                  </div>
+                </div>
+                <div className="flex items-start">
+                  <div className="bg-indigo-500/20 p-3 rounded-lg mr-4">
+                    <FiLayers className="text-indigo-300 text-xl" />
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-indigo-300 mb-1">Layers</h3>
+                    <p className="text-sm">Toggle different data layers to focus on specific hazards and communities.</p>
+                  </div>
+                </div>
+                <div className="flex items-start">
+                  <div className="bg-indigo-500/20 p-3 rounded-lg mr-4">
+                    <FiClock className="text-indigo-300 text-xl" />
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-indigo-300 mb-1">Time Travel</h3>
+                    <p className="text-sm">Explore how hazards have changed over time with the time slider.</p>
+                  </div>
+                </div>
+                <div className="flex items-start">
+                  <div className="bg-indigo-500/20 p-3 rounded-lg mr-4">
+                    <FiGlobe className="text-indigo-300 text-xl" />
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-indigo-300 mb-1">Interact</h3>
+                    <p className="text-sm">Click on any hazard or community to see detailed information about it.</p>
+                  </div>
+                </div>
+              </div>
+              <button 
+                className="w-full bg-indigo-500 hover:bg-indigo-600 text-white font-semibold py-3 rounded-xl shadow-md transition transform hover:scale-105"
+                onClick={() => setShowTutorial(false)}
+              >
+                Get Started
+              </button>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Help Button */}
       <motion.button
         initial={{ opacity: 0, scale: 0.8 }}
         animate={{ opacity: 1, scale: 1 }}
         transition={{ delay: 0.5 }}
-        className="absolute bottom-4 right-4 z-[1000] btn command-panel rounded-full w-12 h-12 flex items-center justify-center"
+        className="absolute bottom-4 right-4 z-[1000] bg-white/10 backdrop-blur-xl border border-white/20 rounded-full w-12 h-12 flex items-center justify-center text-white hover:bg-white/20 transition transform hover:scale-110"
         onClick={() => setShowTutorial(true)}
+        title="Show Tutorial"
       >
         <FiInfo className="text-xl" />
       </motion.button>
@@ -669,15 +813,26 @@ const Atlas: React.FC = () => {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.6 }}
-        className="absolute bottom-0 left-0 right-0 z-[1000] bg-base-200/70 text-primary text-xs p-2 flex justify-between backdrop-blur-sm"
+        className="absolute bottom-0 left-0 right-0 z-[1000] bg-black/70 text-white text-xs p-3 flex justify-between items-center backdrop-blur-sm"
       >
-        <div>
-          {equityLensActive ? 'Equity Lens Active' : 'Standard Map View'} | 
-          {timePeriod === 'past' ? ' Viewing Past Data' : 
-          timePeriod === 'present' ? ' Viewing Current Data' : ' Viewing Future Projections'}
+        <div className="flex items-center gap-4">
+          <div className={`px-3 py-1 rounded-full ${equityLensActive ? 'bg-indigo-500/20 text-indigo-300' : 'bg-blue-500/20 text-blue-300'}`}>
+            {equityLensActive ? 'Equity Lens' : 'Map View'}
+          </div>
+          <div className="text-white/70">
+            {timePeriod === 'past' ? 'Viewing Past Data' : 
+            timePeriod === 'present' ? 'Viewing Current Data' : 'Viewing Future Projections'}
+          </div>
         </div>
-        <div>
-          {hazardData.features.length} Hazards | {communityData.features.length} Communities | Connected
+        <div className="flex items-center gap-4">
+          <div className="text-white/70">
+            {hazardData.features.length} Hazards
+          </div>
+          <div className="text-white/70">
+            {communityData.features.length} Communities
+          </div>
+          <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>
+          <div className="text-white/70">Connected</div>
         </div>
       </motion.div>
     </div>
