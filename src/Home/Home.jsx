@@ -122,7 +122,7 @@ const Home = ({ switchToModule }) => {
         mapInstance.current = null;
       }
       initializeMap();
-    }, 30000);
+    }, 300000);
 
     // Cleanup
     return () => {
@@ -138,7 +138,7 @@ const Home = ({ switchToModule }) => {
     if (images.length > 0) {
       const interval = setInterval(() => {
         setImageIndex((prev) => (prev + 1) % images.length);
-      }, 2500);
+      }, 25000);
       return () => clearInterval(interval);
     }
   }, [currentSlide, images.length]);
