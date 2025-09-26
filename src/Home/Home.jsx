@@ -5,13 +5,8 @@ import {
   FaChartLine,
 } from "react-icons/fa";
 import L from "leaflet";
-
 import HeroSection from "../Home/HeroSection";
 import PoweredByNASA from "../Home/PoweredByNASA";
-
-// const mapRef = useRef(null);
-// const mapInstance = useRef(null);
-
 
 const Home = ({ switchToModule }) => {
   const [activeMission, setActiveMission] = useState(null);
@@ -21,108 +16,146 @@ const Home = ({ switchToModule }) => {
     economicCost: 325_000_000_000,
   });
   const [currentSlide, setCurrentSlide] = useState(0);
+  const [imageIndex, setImageIndex] = useState(0);
   const mapRef = useRef(null);
   const mapInstance = useRef(null);
 
-  //  console.log("sss:",mapRef.current);
+  // Module images and descriptions
+  const moduleImages = {
+    Pulse: [
+      "https://i.ibb.co/HD4L4KQf/Screenshot-2025-09-26-231655.png",
+      "https://i.ibb.co/qYCcQqxB/Screenshot-2025-09-26-231727.png",
+      "https://i.ibb.co/GQ3q2XQm/Screenshot-2025-09-26-233923.png",
+       "https://i.ibb.co/LzVHzN6y/Screenshot-2025-09-26-231257.png",
+      "https://i.ibb.co/QFKYLBWh/Screenshot-2025-09-26-231359.png",
+    ],
+    Atlas: [
+      "https://i.ibb.co.com/21sK9zQj/Screenshot-2025-09-27-002211.pn",
+"https://i.ibb.co.com/bjy96J6y/Screenshot-2025-09-27-002108.png",
+"https://i.ibb.co.com/WvvQ0grX/Screenshot-2025-09-27-002151.pn",
+"https://i.ibb.co.com/21sK9zQj/Screenshot-2025-09-27-002211.pn",
+    ],
+    Simulate: [
+"https://i.ibb.co.com/tP3j0hZ7/Screenshot-2025-09-27-002018.png",
+"https://i.ibb.co.com/kV0y1Fr9/Screenshot-2025-09-27-002054.png",
+"https://i.ibb.co.com/bjy96J6y/Screenshot-2025-09-27-002108.png",
+"https://i.ibb.co.com/5gtzFffG/Screenshot-2025-09-27-002119.png",
+"https://i.ibb.co.com/qM3wVJsJ/Screenshot-2025-09-27-002131.png",
+    ],
+    Impact: [
+"https://i.ibb.co.com/HJ69Tcb/Screenshot-2025-09-27-002454.png",
+"https://i.ibb.co.com/4Rdqn2y4/Screenshot-2025-09-27-002505.pn",
+"https://i.ibb.co.com/F41wDtRT/Screenshot-2025-09-27-002516.pn",
+"https://i.ibb.co.com/1wd8443/Screenshot-2025-09-27-002529.png",
+"https://i.ibb.co.com/Kptndhtj/Screenshot-2025-09-27-002541.pn",
+    ],
+    Engage: [
+"https://i.ibb.co.com/s0mSc7z/Screenshot-2025-09-27-002417.png",
+"https://i.ibb.co.com/Xry8LCZ6/Screenshot-2025-09-27-002429.pn",
+"https://i.ibb.co.com/nqBFFRf5/Screenshot-2025-09-27-002440.pn",
+    ],
+  };
+
+  const moduleDescriptions = [
+    "Real-time monitoring of urban systems",
+    "Interactive mapping of risk and vulnerability",
+    "Test interventions and policy scenarios",
+    "Measure outcomes and effectiveness",
+    "Collaborate with stakeholders and communities",
+  ];
+
+  const currentModule = ["Pulse", "Atlas", "Simulate", "Impact", "Engage"][currentSlide];
+  const images = moduleImages[currentModule];
+
   // Initialize Leaflet map
-useEffect(() => {
-  let observer;
-  let rerenderTimer;
+  useEffect(() => {
+    let observer;
+    let rerenderTimer;
 
-  const initializeMap = () => {
-    if (mapRef.current && !mapInstance.current) {
-      mapInstance.current = L.map(mapRef.current).setView([23.8103, 90.4125], 3);
+    const initializeMap = () => {
+      if (mapRef.current && !mapInstance.current) {
+        mapInstance.current = L.map(mapRef.current).setView([23.8103, 90.4125], 3);
 
-      L.tileLayer(
-        "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
-        {
-          attribution: "Tiles © Esri & contributors",
-        }
-      ).addTo(mapInstance.current);
+        L.tileLayer(
+          "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
+          {
+            attribution: "Tiles © Esri & contributors",
+          }
+        ).addTo(mapInstance.current);
 
-      const cities = [
-        { lat: 23.8103, lng: 90.4125, name: "Dhaka" },
-        { lat: 19.0760, lng: 72.8777, name: "Mumbai" },
-        { lat: 28.6139, lng: 77.2090, name: "Delhi" },
-        { lat: 22.5726, lng: 88.3639, name: "Kolkata" },
-        { lat: 13.0827, lng: 80.2707, name: "Chennai" },
-      ];
+        const cities = [
+          { lat: 23.8103, lng: 90.4125, name: "Dhaka" },
+          { lat: 19.0760, lng: 72.8777, name: "Mumbai" },
+          { lat: 28.6139, lng: 77.2090, name: "Delhi" },
+          { lat: 22.5726, lng: 88.3639, name: "Kolkata" },
+          { lat: 13.0827, lng: 80.2707, name: "Chennai" },
+        ];
 
-      cities.forEach(city => {
-        L.circleMarker([city.lat, city.lng], {
-          radius: 8,
-          color: "#ff6b6b",
-          fillColor: "#ff6b6b",
-          fillOpacity: 0.7,
-          weight: 2,
-        })
-          .addTo(mapInstance.current)
-          .bindPopup(`<b>${city.name}</b><br>Heat risk: High`);
-      });
+        cities.forEach(city => {
+          L.circleMarker([city.lat, city.lng], {
+            radius: 8,
+            color: "#ff6b6b",
+            fillColor: "#ff6b6b",
+            fillOpacity: 0.7,
+            weight: 2,
+          })
+            .addTo(mapInstance.current)
+            .bindPopup(`<b>${city.name}</b><br>Heat risk: High`);
+        });
 
-      // ResizeObserver to keep map responsive
-      observer = new ResizeObserver(() => {
-        mapInstance.current?.invalidateSize();
-      });
+        // ResizeObserver to keep map responsive
+        observer = new ResizeObserver(() => {
+          mapInstance.current?.invalidateSize();
+        });
 
-      observer.observe(mapRef.current);
-    }
-  };
+        observer.observe(mapRef.current);
+      }
+    };
 
-  // Initial map setup
-  initializeMap();
+    // Initial map setup
+    initializeMap();
 
-  //  Set timer to re-render map after 5 minutes (300,000 ms)
-  rerenderTimer = setTimeout(() => {
-    if (mapInstance.current) {
-      mapInstance.current.remove();
+    // Set timer to re-render map after 30 seconds
+    rerenderTimer = setTimeout(() => {
+      if (mapInstance.current) {
+        mapInstance.current.remove();
+        mapInstance.current = null;
+      }
+      initializeMap();
+    }, 30000);
+
+    // Cleanup
+    return () => {
+      observer?.disconnect();
+      clearTimeout(rerenderTimer);
+      mapInstance.current?.remove();
       mapInstance.current = null;
+    };
+  }, []);
+
+  // Module image carousel effect
+  useEffect(() => {
+    if (images.length > 0) {
+      const interval = setInterval(() => {
+        setImageIndex((prev) => (prev + 1) % images.length);
+      }, 2500);
+      return () => clearInterval(interval);
     }
-    initializeMap(); // Re-initialize map
-  }, 30000); // 5 minutes
+  }, [currentSlide, images.length]);
 
-  // Cleanup
-  return () => {
-    observer?.disconnect();
-    clearTimeout(rerenderTimer);
-    mapInstance.current?.remove();
-    mapInstance.current = null;
-  };
-}, []);
-
-
-  /** Comparison Slider Component */
-  const CompareSlider = ({ itemOne, itemTwo }) => {
-    return (
-      <div className="flex flex-col md:flex-row gap-4">
-      <div className="flex-1">{itemOne}</div>
-        <div className="flex-1">{itemTwo}</div>
-      </div>
-    );
-  };
-  
-
-  /* -------------------------------------------------
-   * Simulate live‑metrics updates
-   * ------------------------------------------------- */
+  // Simulate live metrics updates
   useEffect(() => {
     const interval = setInterval(() => {
-     
       setMetrics((prev) => ({
-        heatExposure:
-          prev.heatExposure + Math.floor(Math.random() * 1000) - 500,
+        heatExposure: prev.heatExposure + Math.floor(Math.random() * 1000) - 500,
         waterStress: prev.waterStress + Math.floor(Math.random() * 500) - 250,
-        economicCost:
-          prev.economicCost + Math.floor(Math.random() * 1_000_000) - 500_000,
+        economicCost: prev.economicCost + Math.floor(Math.random() * 1_000_000) - 500_000,
       }));
     }, 30000);
     return () => clearInterval(interval);
   }, []);
 
-  /* -------------------------------------------------
-   * Auto‑rotate carousel (for the module preview)
-   * ------------------------------------------------- */
+  // Auto-rotate module carousel
   useEffect(() => {
     const interval = setInterval(() => {
       setCurrentSlide((prev) => (prev + 1) % 5);
@@ -130,9 +163,7 @@ useEffect(() => {
     return () => clearInterval(interval);
   }, []);
 
-  /* -------------------------------------------------
-   * NASA missions data
-   * ------------------------------------------------- */
+  // NASA missions data
   const missions = [
     {
       id: "landsat",
@@ -144,117 +175,111 @@ useEffect(() => {
     {
       id: "modis",
       name: "MODIS",
-      description:
-        "Tracking heat islands and temperature anomalies.",
+      description: "Tracking heat islands and temperature anomalies.",
       logo: "/placeholder-modis.png",
       dataType: "Thermal Data",
     },
     {
       id: "grace",
       name: "GRACE‑FO",
-      description:
-        "Measuring groundwater changes and mass transport.",
+      description: "Measuring groundwater changes and mass transport.",
       logo: "/placeholder-grace.png",
       dataType: "Gravimetry",
     },
     {
       id: "viirs",
       name: "VIIRS",
-      description:
-        "Nighttime lights and energy consumption patterns.",
+      description: "Nighttime lights and energy consumption patterns.",
       logo: "/placeholder-viirs.png",
       dataType: "Night Lights",
     },
     {
       id: "firms",
       name: "FIRMS",
-      description:
-        "Real‑time active fire and thermal anomaly detection.",
+      description: "Real‑time active fire and thermal anomaly detection.",
       logo: "/placeholder-firms.png",
       dataType: "Fire Data",
     },
   ];
 
-  /* -------------------------------------------------
-   * Helper – format big numbers with commas
-   * ------------------------------------------------- */
+  // Helper function to format numbers with commas
   const formatNumber = (num) => num.toLocaleString("en-US");
+
+  // Comparison Slider Component
+  const CompareSlider = ({ itemOne, itemTwo }) => {
+    return (
+      <div className="flex flex-col md:flex-row gap-4">
+        <div className="flex-1">{itemOne}</div>
+        <div className="flex-1">{itemTwo}</div>
+      </div>
+    );
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-900 to-black text-white overflow-x-hidden">
-      {/* -------------------------------------------------
-          Hero Section with Earth Background
-        ------------------------------------------------- */}
+      {/* Hero Section */}
       <section>
-          <HeroSection></HeroSection>
-      </section> 
-{/* powerdby nasa data */}
-      <section>
-        <div className="p-1 m-2">
-        <PoweredByNASA></PoweredByNASA>
-        </div>
-        
+        <HeroSection />
       </section>
 
-      {/* -------------------------------------------------
-          NASA Missions Gallery
-        ------------------------------------------------- */}
-        {/* Mission Modal */}
-        {activeMission && (
-          <div className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4">
-            <div className="bg-gray-800 rounded-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-              <div className="p-6">
-                <div className="flex justify-between items-center mb-6">
-                  <h3 className="text-2xl font-bold">
-                    {activeMission.name} Data
-                  </h3>
-                  <button
-                    onClick={() => setActiveMission(null)}
-                    className="text-gray-400 hover:text-white"
-                  >
-                    ✕
-                  </button>
-                </div>
+      {/* Powered by NASA */}
+      <section>
+        <div className="p-1 m-2">
+          <PoweredByNASA />
+        </div>
+      </section>
 
-                <div className="h-64 bg-gray-900 rounded-lg mb-6 flex items-center justify-center">
-                  {activeMission.id === "modis" ? (
-                    <div className="text-center">
-                      <div className="w-64 h-48 bg-gradient-to-r from-blue-400 via-red-400 to-orange-400 rounded-lg mb-4" />
-                      <p>Urban Heat Island Visualization</p>
+      {/* Mission Modal */}
+      {activeMission && (
+        <div className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4">
+          <div className="bg-gray-800 rounded-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="p-6">
+              <div className="flex justify-between items-center mb-6">
+                <h3 className="text-2xl font-bold">{activeMission.name} Data</h3>
+                <button
+                  onClick={() => setActiveMission(null)}
+                  className="text-gray-400 hover:text-white"
+                >
+                  ✕
+                </button>
+              </div>
+
+              <div className="h-64 bg-gray-900 rounded-lg mb-6 flex items-center justify-center">
+                {activeMission.id === "modis" ? (
+                  <div className="text-center">
+                    <div className="w-64 h-48 bg-gradient-to-r from-blue-400 via-red-400 to-orange-400 rounded-lg mb-4" />
+                    <p>Urban Heat Island Visualization</p>
+                  </div>
+                ) : activeMission.id === "grace" ? (
+                  <div className="text-center">
+                    <div className="w-64 h-48 bg-gray-700 rounded-lg mb-4 flex items-center justify-center">
+                      <FaChartLine className="text-4xl text-green-400" />
                     </div>
-                  ) : activeMission.id === "grace" ? (
-                    <div className="text-center">
-                      <div className="w-64 h-48 bg-gray-700 rounded-lg mb-4 flex items-center justify-center">
-                        <FaChartLine className="text-4xl text-green-400" />
-                      </div>
-                      <p>Groundwater Depletion Timeline</p>
-                    </div>
-                  ) : (
-                    <p>
-                      Sample data visualization for {activeMission.name}
-                    </p>
-                  )}
-                </div>
+                    <p>Groundwater Depletion Timeline</p>
+                  </div>
+                ) : (
+                  <p>Sample data visualization for {activeMission.name}</p>
+                )}
+              </div>
 
-                <p className="text-gray-400 mb-6">
-                  This is a sample of the {activeMission.dataType} provided by{" "}
-                  {activeMission.name}. In the full application, you would be
-                  able to explore real‑time data streams and historical trends.
-                </p>
+              <p className="text-gray-400 mb-6">
+                This is a sample of the {activeMission.dataType} provided by{" "}
+                {activeMission.name}. In the full application, you would be
+                able to explore real‑time data streams and historical trends.
+              </p>
 
-                <div className="flex justify-end">
-                  <button
-                    onClick={() => setActiveMission(null)}
-                    className="px-4 py-2 bg-blue-600 rounded-lg hover:bg-blue-700"
-                  >
-                    Close
-                  </button>
-                </div>
+              <div className="flex justify-end">
+                <button
+                  onClick={() => setActiveMission(null)}
+                  className="px-4 py-2 bg-blue-600 rounded-lg hover:bg-blue-700"
+                >
+                  Close
+                </button>
               </div>
             </div>
           </div>
-        )}
-      {/* </section>  */}
+        </div>
+      )}
 
       {/* ASTRA Difference */}
       <section className="py-20 px-4 md:px-8 bg-gray-900 bg-opacity-50">
@@ -265,7 +290,7 @@ useEffect(() => {
 
           <CompareSlider
             itemOne={
-              <div className="h-96 rounded-lg overflow-hidden relative border border-gray-600  from-purple-900 via-indigo-900 to-blue-900  ">
+              <div className="h-96 rounded-lg overflow-hidden relative border border-gray-600 from-purple-900 via-indigo-900 to-blue-900">
                 <div ref={mapRef} className="absolute inset-0 z-10" />
                 <div className="absolute top-3 left-3 bg-black/70 text-white px-3 py-1 rounded text-sm uppercase tracking-wide z-10">
                   Traditional Satellite View
@@ -284,9 +309,7 @@ useEffect(() => {
 
                 {/* Network visualization */}
                 <div className="absolute inset-0">
-                  {/* Network connections */}
                   <svg className="absolute inset-0 w-full h-full">
-                    {/* Create a network of connections */}
                     {Array.from({ length: 15 }).map((_, i) => {
                       const x1 = Math.random() * 100;
                       const y1 = Math.random() * 100;
@@ -308,7 +331,6 @@ useEffect(() => {
                     })}
                   </svg>
 
-                  {/* Network nodes */}
                   {Array.from({ length: 20 }).map((_, i) => {
                     const top = Math.random() * 100;
                     const left = Math.random() * 100;
@@ -324,7 +346,6 @@ useEffect(() => {
                     );
                   })}
 
-                  {/* Data flow animation */}
                   <div className="absolute inset-0 overflow-hidden">
                     {Array.from({ length: 5 }).map((_, i) => (
                       <div
@@ -341,7 +362,6 @@ useEffect(() => {
                   </div>
                 </div>
 
-                {/* Overlay information */}
                 <div className="absolute bottom-4 left-4 bg-black/70 text-cyan-300 text-xs p-2 rounded">
                   <div className="flex items-center">
                     <div className="w-2 h-2 bg-cyan-400 rounded-full mr-2 animate-pulse"></div>
@@ -366,16 +386,13 @@ useEffect(() => {
         </div>
       </section>
 
-      {/* -------------------------------------------------
-          Live Global Dashboard
-        ------------------------------------------------- */}
+      {/* Live Global Dashboard */}
       <section className="py-16 px-4 md:px-8">
         <h2 className="text-3xl md:text-4xl font-bold text-center mb-12">
           Live Global <span className="text-cyan-400">Dashboard</span>
         </h2>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-6xl mx-auto">
-          {/* Heat exposure */}
           <div className="bg-gray-800 rounded-xl p-6 text-center">
             <div className="text-4xl font-bold text-orange-400 mb-2">
               {formatNumber(metrics.heatExposure)}
@@ -385,7 +402,6 @@ useEffect(() => {
             </p>
           </div>
 
-          {/* Water stress */}
           <div className="bg-gray-800 rounded-xl p-6 text-center">
             <div className="text-4xl font-bold text-blue-400 mb-2">
               {formatNumber(metrics.waterStress)}
@@ -393,7 +409,6 @@ useEffect(() => {
             <p className="text-gray-400">Coastal Cities Facing High Water Stress</p>
           </div>
 
-          {/* Economic cost */}
           <div className="bg-gray-800 rounded-xl p-6 text-center">
             <div className="text-4xl font-bold text-purple-400 mb-2">
               ${formatNumber(metrics.economicCost)}
@@ -410,62 +425,50 @@ useEffect(() => {
         </p>
       </section>
 
-      {/* -------------------------------------------------
-          Module Preview Carousel
-        ------------------------------------------------- */}
+      {/* Module Preview Carousel */}
       <section className="py-16 px-4 md:px-8 bg-gray-900">
         <h2 className="text-3xl md:text-4xl font-bold text-center mb-12">
           Explore ASTRA <span className="text-green-400">Modules</span>
         </h2>
 
         <div className="max-w-5xl mx-auto">
-          {/* Buttons to pick a module */}
           <div className="grid grid-cols-5 gap-4 mb-4">
-            {["Pulse", "Atlas", "Simulate", "Impact", "Engage"].map(
-              (module, index) => (
-                <button
-                  key={module}
-                  className={`
-                    py-3 rounded-lg transition-colors
-                    ${currentSlide === index ? "bg-blue-600" : "bg-gray-700 hover:bg-gray-600"}
-                  `}
-                  onClick={() => setCurrentSlide(index)}
-                >
-                  {module}
-                </button>
-              )
-            )}
+            {["Pulse", "Atlas", "Simulate", "Impact", "Engage"].map((module, index) => (
+              <button
+                key={module}
+                className={`py-3 rounded-lg transition-colors ${
+                  currentSlide === index ? "bg-blue-600" : "bg-gray-700 hover:bg-gray-600"
+                }`}
+                onClick={() => {
+                  setCurrentSlide(index);
+                  setImageIndex(0);
+                }}
+              >
+                {module}
+              </button>
+            ))}
           </div>
 
-          {/* Preview area */}
           <div className="bg-black rounded-xl overflow-hidden h-96 relative">
             <div className="absolute inset-0 flex items-center justify-center">
               <div className="text-center">
-                <div className="w-72 h-48 bg-gray-800 rounded-lg mb-6 mx-auto flex items-center justify-center">
-                  <FaPlay className="text-4xl text-green-400 opacity-70" />
-                </div>
-                <h3 className="text-2xl font-bold mb-2">
-                  {["Pulse", "Atlas", "Simulate", "Impact", "Engage"][
-                    currentSlide
-                  ]}
-                </h3>
-                <p className="text-gray-400 max-w-md mx-auto">
-                  {[
-                    "Real-time monitoring of urban systems",
-                    "Interactive mapping of risk and vulnerability",
-                    "Test interventions and policy scenarios",
-                    "Measure outcomes and effectiveness",
-                    "Collaborate with stakeholders and communities",
-                  ][currentSlide]}
-                </p>
+                {images.length > 0 ? (
+                  <img
+                    src={images[imageIndex]}
+                    alt={`${currentModule} preview`}
+                    className="w-full h-full object-cover rounded-lg mb-6 mx-auto transition-opacity duration-700 ease-in-out"
+                  />
+                ) : (
+                  <div className="w-72 h-48 bg-gray-800 rounded-lg mb-6 mx-auto flex items-center justify-center">
+                    <FaPlay className="text-4xl text-green-400 opacity-70" />
+                  </div>
+                )}
+
+                <h3 className="text-2xl font-bold mb-2">{currentModule}</h3>
+                <p className="text-gray-400 max-w-md mx-auto">{moduleDescriptions[currentSlide]}</p>
+
                 <button
-                  onClick={() =>
-                    switchToModule(
-                      ["pulse", "atlas", "simulate", "impact", "engage"][
-                        currentSlide
-                      ]
-                    )
-                  }
+                  onClick={() => switchToModule(currentModule.toLowerCase())}
                   className="mt-6 px-6 py-2 bg-green-600 rounded-lg hover:bg-green-700 transition-colors"
                 >
                   Explore Module
@@ -476,9 +479,7 @@ useEffect(() => {
         </div>
       </section>
 
-      {/* -------------------------------------------------
-          Final Call‑to‑Action
-        ------------------------------------------------- */}
+      {/* Final Call-to-Action */}
       <section className="py-20 px-4 md:px-8 text-center relative">
         <div className="absolute inset-0 bg-gradient-to-b from-blue-900/20 to-black/70 z-0" />
         <div className="relative z-10 max-w-3xl mx-auto">
@@ -497,23 +498,6 @@ useEffect(() => {
           </button>
         </div>
       </section>
-
-      {/* -------------------------------------------------
-          Inline styles
-        ------------------------------------------------- */}
-      <style jsx>{`
-        .glow {
-          box-shadow: 0 0 15px rgba(34, 211, 238, 0.5),
-            0 0 30px rgba(34, 211, 238, 0.3);
-        }
-        .scrollbar-hide::-webkit-scrollbar {
-          display: none;
-        }
-        .scrollbar-hide {
-          -ms-overflow-style: none;
-          scrollbar-width: none;
-        }
-      `}</style>
     </div>
   );
 };

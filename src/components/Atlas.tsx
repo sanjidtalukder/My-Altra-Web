@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { FiLayers, FiClock, FiEye, FiGlobe, FiAlertTriangle, FiHome, FiInfo, FiPlay, FiPause, FiX, FiChevronRight, FiChevronDown } from 'react-icons/fi';
+import { FiLayers, FiClock, FiEye, FiGlobe, FiAlertTriangle, FiHome, FiInfo, FiPlay, FiPause, FiX, FiChevronRight, FiChevronDown, FiMap, FiUsers, FiActivity } from 'react-icons/fi';
 
 // Demo data
 const hazardData = {
@@ -66,6 +66,7 @@ const Atlas: React.FC = () => {
   const [showLayerControls, setShowLayerControls] = useState(true);
   const [showTimeControls, setShowTimeControls] = useState(true);
   const [showSimulationControls, setShowSimulationControls] = useState(true);
+  const [activeTab, setActiveTab] = useState('hazards');
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const animationRef = useRef<number>();
 
@@ -170,9 +171,11 @@ const Atlas: React.FC = () => {
       if (selectedNode && !equityLensActive) {
         ctx.strokeStyle = '#00ffff';
         ctx.lineWidth = 3;
+        ctx.setLineDash([5, 5]);
         ctx.beginPath();
         ctx.arc(selectedNode.x, selectedNode.y, 30, 0, Math.PI * 2);
         ctx.stroke();
+        ctx.setLineDash([]);
       }
       
       if (isPlaying) {
@@ -194,6 +197,7 @@ const Atlas: React.FC = () => {
     const width = canvas.width;
     const height = canvas.height;
 
+    // Draw subtle grid
     ctx.strokeStyle = 'rgba(0, 212, 255, 0.1)';
     ctx.lineWidth = 1;
     for (let x = 0; x < width; x += 50) {
@@ -209,22 +213,38 @@ const Atlas: React.FC = () => {
       ctx.stroke();
     }
 
+    // Draw city landmarks as subtle background elements
+    ctx.fillStyle = 'rgba(100, 100, 255, 0.05)';
+    for (let i = 0; i < 8; i++) {
+      const x = Math.random() * width;
+      const y = Math.random() * height;
+      const size = 10 + Math.random() * 40;
+      ctx.beginPath();
+      ctx.arc(x, y, size, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
     const filteredHazards = getFilteredHazards();
 
+    // Draw hazard nodes with pulsing effect
     filteredHazards.forEach((feature, index) => {
       if (!visibleLayers[feature.properties.type as keyof VisibleLayers]) return;
 
       const x = (index + 1) * (width / (filteredHazards.length + 1));
       const y = height * 0.3;
       const radius = feature.properties.severity * 20 + 10;
+      const time = Date.now() * 0.001;
 
-      const gradient = ctx.createRadialGradient(x, y, 0, x, y, radius * 2);
+      // Pulsing effect
+      const pulse = Math.sin(time * 2) * 3 + 1;
+
+      const gradient = ctx.createRadialGradient(x, y, 0, x, y, radius * 2 + pulse);
       gradient.addColorStop(0, getHazardColor(feature.properties.type, 0.8));
       gradient.addColorStop(1, getHazardColor(feature.properties.type, 0));
 
       ctx.fillStyle = gradient;
       ctx.beginPath();
-      ctx.arc(x, y, radius * 2, 0, Math.PI * 2);
+      ctx.arc(x, y, radius * 2 + pulse, 0, Math.PI * 2);
       ctx.fill();
 
       ctx.fillStyle = getHazardColor(feature.properties.type, 1);
@@ -232,10 +252,16 @@ const Atlas: React.FC = () => {
       ctx.arc(x, y, radius, 0, Math.PI * 2);
       ctx.fill();
 
+      // Add glow effect
+      ctx.shadowColor = getHazardColor(feature.properties.type, 0.8);
+      ctx.shadowBlur = 15;
+      ctx.fill();
+      ctx.shadowBlur = 0;
+
       ctx.fillStyle = '#ffffff';
-      ctx.font = '12px Orbitron';
+      ctx.font = 'bold 12px Orbitron';
       ctx.textAlign = 'center';
-      ctx.fillText(feature.properties.type.toUpperCase(), x, y + radius + 20);
+      ctx.fillText(feature.properties.name, x, y + radius + 20);
     });
 
     if (visibleLayers.communities) {
@@ -249,8 +275,14 @@ const Atlas: React.FC = () => {
         ctx.arc(x, y, radius, 0, Math.PI * 2);
         ctx.fill();
 
+        // Add glow effect for communities
+        ctx.shadowColor = getVulnerabilityColor(feature.properties.vulnerabilityIndex);
+        ctx.shadowBlur = 10;
+        ctx.fill();
+        ctx.shadowBlur = 0;
+
         ctx.fillStyle = '#ffffff';
-        ctx.font = '12px Orbitron';
+        ctx.font = 'bold 12px Orbitron';
         ctx.textAlign = 'center';
         ctx.fillText(feature.properties.name, x, y + radius + 20);
       });
@@ -262,14 +294,27 @@ const Atlas: React.FC = () => {
     const height = canvas.height;
     const time = Date.now() * 0.001;
 
-    ctx.fillStyle = 'rgba(10, 10, 18, 0.9)';
+    // Create a starry background effect
+    ctx.fillStyle = 'rgba(10, 10, 18, 0.95)';
     ctx.fillRect(0, 0, width, height);
+
+    // Draw stars
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.5)';
+    for (let i = 0; i < 100; i++) {
+      const x = Math.random() * width;
+      const y = Math.random() * height;
+      const size = Math.random() * 1.5;
+      ctx.beginPath();
+      ctx.arc(x, y, size, 0, Math.PI * 2);
+      ctx.fill();
+    }
 
     const nodes: Node[] = [];
     const links: Link[] = [];
 
     const filteredHazards = getFilteredHazards();
 
+    // Create hazard nodes in a circular pattern
     filteredHazards.forEach((feature, index) => {
       if (!visibleLayers[feature.properties.type as keyof VisibleLayers]) return;
 
@@ -288,6 +333,7 @@ const Atlas: React.FC = () => {
       nodes.push(node);
     });
 
+    // Create community nodes in an inner circle
     if (visibleLayers.communities) {
       communityData.features.forEach((feature, index) => {
         const angle = (index / communityData.features.length) * Math.PI * 2;
@@ -306,6 +352,7 @@ const Atlas: React.FC = () => {
       });
     }
 
+    // Create connections between hazards and communities
     if (visibleLayers.connections) {
       nodes.forEach(source => {
         if (source.type === 'hazard') {
@@ -329,6 +376,7 @@ const Atlas: React.FC = () => {
       });
     }
 
+    // Draw connections with animated flow
     links.forEach(link => {
       ctx.beginPath();
       ctx.moveTo(link.source.x, link.source.y);
@@ -336,31 +384,57 @@ const Atlas: React.FC = () => {
       ctx.strokeStyle = getHazardColor(link.type, 0.3 * link.weight);
       ctx.lineWidth = 2 * link.weight;
       ctx.stroke();
+
+      // Add animated particles along the connection lines
+      const progress = (time * 0.5) % 1;
+      const particleX = link.source.x + (link.target.x - link.source.x) * progress;
+      const particleY = link.source.y + (link.target.y - link.source.y) * progress;
+      
+      ctx.fillStyle = getHazardColor(link.type, 1);
+      ctx.beginPath();
+      ctx.arc(particleX, particleY, 2 * link.weight, 0, Math.PI * 2);
+      ctx.fill();
     });
 
+    // Draw nodes with pulsing effect
     nodes.forEach(node => {
       if (node.type === 'hazard') {
         const radius = node.properties.severity * 15 + 5;
+        const pulse = Math.sin(time * 3) * 2 + 1;
         
-        const gradient = ctx.createRadialGradient(node.x, node.y, 0, node.x, node.y, radius * 2);
+        const gradient = ctx.createRadialGradient(node.x, node.y, 0, node.x, node.y, radius * 2 + pulse);
         gradient.addColorStop(0, getHazardColor(node.properties.type, 0.8));
         gradient.addColorStop(1, getHazardColor(node.properties.type, 0));
         
         ctx.fillStyle = gradient;
         ctx.beginPath();
-        ctx.arc(node.x, node.y, radius * 2, 0, Math.PI * 2);
+        ctx.arc(node.x, node.y, radius * 2 + pulse, 0, Math.PI * 2);
         ctx.fill();
         
         ctx.fillStyle = getHazardColor(node.properties.type, 1);
         ctx.beginPath();
         ctx.arc(node.x, node.y, radius, 0, Math.PI * 2);
         ctx.fill();
+
+        // Add glow effect
+        ctx.shadowColor = getHazardColor(node.properties.type, 0.8);
+        ctx.shadowBlur = 15;
+        ctx.fill();
+        ctx.shadowBlur = 0;
       } else {
         const radius = node.properties.population / 15000;
+        const pulse = Math.sin(time * 2) * 1 + 1;
+        
         ctx.fillStyle = getVulnerabilityColor(node.properties.vulnerabilityIndex);
         ctx.beginPath();
-        ctx.arc(node.x, node.y, radius, 0, Math.PI * 2);
+        ctx.arc(node.x, node.y, radius + pulse, 0, Math.PI * 2);
         ctx.fill();
+
+        // Add glow effect
+        ctx.shadowColor = getVulnerabilityColor(node.properties.vulnerabilityIndex);
+        ctx.shadowBlur = 10;
+        ctx.fill();
+        ctx.shadowBlur = 0;
       }
     });
   };
@@ -404,10 +478,33 @@ const Atlas: React.FC = () => {
   return (
     <div className="relative w-full h-full bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 overflow-hidden">
       
+      {/* Animated background particles */}
+      <div className="absolute inset-0 z-0 overflow-hidden">
+        {[...Array(20)].map((_, i) => (
+          <motion.div
+            key={i}
+            className="absolute w-1 h-1 bg-blue-500 rounded-full opacity-20"
+            initial={{
+              x: Math.random() * 100 + 'vw',
+              y: Math.random() * 100 + 'vh',
+            }}
+            animate={{
+              x: [Math.random() * 100 + 'vw', Math.random() * 100 + 'vw'],
+              y: [Math.random() * 100 + 'vh', Math.random() * 100 + 'vh'],
+            }}
+            transition={{
+              duration: Math.random() * 10 + 10,
+              repeat: Infinity,
+              repeatType: "reverse",
+            }}
+          />
+        ))}
+      </div>
+      
       {/* Canvas Container */}
       <canvas
         ref={canvasRef}
-        className="w-full h-full block"
+        className="w-full h-full block items-center z-10 relative"
       />
       
       {/* UI Controls - Fixed positioning and width */}
@@ -416,6 +513,8 @@ const Atlas: React.FC = () => {
         <motion.button
           initial={{ opacity: 0, x: 20 }}
           animate={{ opacity: 1, x: 0 }}
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
           className={`rounded-xl shadow-lg px-5 py-3 flex items-center gap-2 transition-all duration-300 ${
             equityLensActive 
               ? 'bg-indigo-600 text-white ring-2 ring-indigo-300 hover:bg-indigo-700' 
@@ -443,7 +542,12 @@ const Atlas: React.FC = () => {
               <FiClock className="mr-2 text-lg" />
               <span className="font-medium">Time Travel</span>
             </div>
-            {showTimeControls ? <FiChevronDown /> : <FiChevronRight />}
+            <motion.div
+              animate={{ rotate: showTimeControls ? 0 : -90 }}
+              transition={{ duration: 0.2 }}
+            >
+              <FiChevronDown />
+            </motion.div>
           </div>
           
           {showTimeControls && (
@@ -464,7 +568,7 @@ const Atlas: React.FC = () => {
                 max="2"
                 value={['past', 'present', 'future'].indexOf(timePeriod)}
                 onChange={(e) => setTimePeriod(['past', 'present', 'future'][parseInt(e.target.value)])}
-                className="w-full h-2 bg-indigo-500/30 rounded-lg appearance-none cursor-pointer accent-indigo-500"
+                className="w-full h-2 bg-indigo-500/30 rounded-lg appearance-none cursor-pointer slider-thumb"
               />
             </motion.div>
           )}
@@ -485,7 +589,12 @@ const Atlas: React.FC = () => {
               <FiLayers className="mr-2 text-lg" />
               <span className="font-medium">Layers</span>
             </div>
-            {showLayerControls ? <FiChevronDown /> : <FiChevronRight />}
+            <motion.div
+              animate={{ rotate: showLayerControls ? 0 : -90 }}
+              transition={{ duration: 0.2 }}
+            >
+              <FiChevronDown />
+            </motion.div>
           </div>
           
           {showLayerControls && (
@@ -496,64 +605,64 @@ const Atlas: React.FC = () => {
               className="px-4 pb-4"
             >
               <div className="flex flex-col gap-3 text-white/90">
-                <label className="cursor-pointer flex items-center hover:text-indigo-200 transition">
+                <label className="cursor-pointer flex items-center hover:text-indigo-200 transition group">
                   <input
                     type="checkbox"
                     checked={visibleLayers.heat}
                     onChange={() => toggleLayer('heat')}
                     className="mr-3 accent-orange-400 w-4 h-4"
                   />
-                  <div className="w-3 h-3 rounded-full bg-orange-500 mr-2"></div>
+                  <div className="w-3 h-3 rounded-full bg-orange-500 mr-2 group-hover:scale-125 transition-transform"></div>
                   <span className="text-sm">Heat Hazards</span>
                 </label>
-                <label className="cursor-pointer flex items-center hover:text-indigo-200 transition">
+                <label className="cursor-pointer flex items-center hover:text-indigo-200 transition group">
                   <input
                     type="checkbox"
                     checked={visibleLayers.flood}
                     onChange={() => toggleLayer('flood')}
                     className="mr-3 accent-blue-400 w-4 h-4"
                   />
-                  <div className="w-3 h-3 rounded-full bg-blue-500 mr-2"></div>
+                  <div className="w-3 h-3 rounded-full bg-blue-500 mr-2 group-hover:scale-125 transition-transform"></div>
                   <span className="text-sm">Flood Hazards</span>
                 </label>
-                <label className="cursor-pointer flex items-center hover:text-indigo-200 transition">
+                <label className="cursor-pointer flex items-center hover:text-indigo-200 transition group">
                   <input
                     type="checkbox"
                     checked={visibleLayers.fire}
                     onChange={() => toggleLayer('fire')}
                     className="mr-3 accent-red-400 w-4 h-4"
                   />
-                  <div className="w-3 h-3 rounded-full bg-red-500 mr-2"></div>
+                  <div className="w-3 h-3 rounded-full bg-red-500 mr-2 group-hover:scale-125 transition-transform"></div>
                   <span className="text-sm">Fire Hazards</span>
                 </label>
-                <label className="cursor-pointer flex items-center hover:text-indigo-200 transition">
+                <label className="cursor-pointer flex items-center hover:text-indigo-200 transition group">
                   <input
                     type="checkbox"
                     checked={visibleLayers.air}
                     onChange={() => toggleLayer('air')}
                     className="mr-3 accent-gray-400 w-4 h-4"
                   />
-                  <div className="w-3 h-3 rounded-full bg-gray-400 mr-2"></div>
+                  <div className="w-3 h-3 rounded-full bg-gray-400 mr-2 group-hover:scale-125 transition-transform"></div>
                   <span className="text-sm">Air Hazards</span>
                 </label>
-                <label className="cursor-pointer flex items-center hover:text-indigo-200 transition">
+                <label className="cursor-pointer flex items-center hover:text-indigo-200 transition group">
                   <input
                     type="checkbox"
                     checked={visibleLayers.communities}
                     onChange={() => toggleLayer('communities')}
                     className="mr-3 accent-green-400 w-4 h-4"
                   />
-                  <FiHome className="text-green-400 mr-2" />
+                  <FiHome className="text-green-400 mr-2 group-hover:scale-125 transition-transform" />
                   <span className="text-sm">Communities</span>
                 </label>
-                <label className="cursor-pointer flex items-center hover:text-indigo-200 transition">
+                <label className="cursor-pointer flex items-center hover:text-indigo-200 transition group">
                   <input
                     type="checkbox"
                     checked={visibleLayers.connections}
                     onChange={() => toggleLayer('connections')}
                     className="mr-3 accent-purple-400 w-4 h-4"
                   />
-                  <FiGlobe className="text-purple-400 mr-2" />
+                  <FiGlobe className="text-purple-400 mr-2 group-hover:scale-125 transition-transform" />
                   <span className="text-sm">Connections</span>
                 </label>
               </div>
@@ -561,7 +670,7 @@ const Atlas: React.FC = () => {
           )}
         </motion.div>
 
-        {/* Simulation Controls - Fixed to always be centered */}
+        {/* Simulation Controls */}
         {equityLensActive && (
           <motion.div 
             initial={{ opacity: 0, x: 20 }}
@@ -577,7 +686,12 @@ const Atlas: React.FC = () => {
                 <FiPlay className="mr-2 text-lg" />
                 <span className="font-medium">Simulation</span>
               </div>
-              {showSimulationControls ? <FiChevronDown /> : <FiChevronRight />}
+              <motion.div
+                animate={{ rotate: showSimulationControls ? 0 : -90 }}
+                transition={{ duration: 0.2 }}
+              >
+                <FiChevronDown />
+              </motion.div>
             </div>
             
             {showSimulationControls && (
@@ -588,7 +702,9 @@ const Atlas: React.FC = () => {
                 className="px-4 pb-4"
               >
                 <div className="flex flex-col gap-3">
-                  <button 
+                  <motion.button 
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
                     className={`w-full py-2 rounded-lg flex items-center justify-center gap-2 transition ${
                       isPlaying 
                         ? 'bg-indigo-600 text-white shadow-md' 
@@ -598,13 +714,15 @@ const Atlas: React.FC = () => {
                   >
                     {isPlaying ? <FiPause /> : <FiPlay />}
                     {isPlaying ? 'Pause Simulation' : 'Start Simulation'}
-                  </button>
+                  </motion.button>
                   <div className="flex justify-between items-center">
                     <span className="text-white/70 text-sm">Speed:</span>
                     <div className="flex gap-2">
                       {[0.5, 1, 2].map(speed => (
-                        <button
+                        <motion.button
                           key={speed}
+                          whileHover={{ scale: 1.1 }}
+                          whileTap={{ scale: 0.9 }}
                           className={`px-3 py-1 rounded-md transition ${
                             simulationSpeed === speed
                               ? 'bg-indigo-600 text-white shadow-md'
@@ -613,7 +731,7 @@ const Atlas: React.FC = () => {
                           onClick={() => setSimulationSpeed(speed)}
                         >
                           {speed}x
-                        </button>
+                        </motion.button>
                       ))}
                     </div>
                   </div>
@@ -624,12 +742,125 @@ const Atlas: React.FC = () => {
         )}
       </div>
 
+      {/* Data Panel */}
+      <motion.div 
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.4, delay: 0.4 }}
+        className="absolute top-4 left-4 z-10 rounded-2xl bg-white/10 backdrop-blur-xl border border-white/20 shadow-xl w-80 overflow-hidden"
+      >
+        <div className="flex border-b border-white/10">
+          <button 
+            className={`flex-1 py-3 text-center transition ${activeTab === 'hazards' ? 'text-indigo-300 bg-white/5' : 'text-white/70'}`}
+            onClick={() => setActiveTab('hazards')}
+          >
+            <FiAlertTriangle className="inline mr-2" />
+            Hazards
+          </button>
+          <button 
+            className={`flex-1 py-3 text-center transition ${activeTab === 'communities' ? 'text-indigo-300 bg-white/5' : 'text-white/70'}`}
+            onClick={() => setActiveTab('communities')}
+          >
+            <FiUsers className="inline mr-2" />
+            Communities
+          </button>
+        </div>
+        
+        <div className="max-h-60 overflow-y-auto">
+          {activeTab === 'hazards' ? (
+            <div className="p-4 space-y-3">
+              {hazardData.features.map(hazard => (
+                <motion.div 
+                  key={hazard.properties.id}
+                  whileHover={{ scale: 1.02 }}
+                  className="p-3 rounded-lg bg-white/5 cursor-pointer hover:bg-white/10 transition"
+                  onClick={() => {
+                    const canvas = canvasRef.current;
+                    if (!canvas) return;
+                    
+                    const rect = canvas.getBoundingClientRect();
+                    const index = hazardData.features.findIndex(f => f.properties.id === hazard.properties.id);
+                    const x = (index + 1) * (rect.width / (hazardData.features.length + 1));
+                    const y = rect.height * 0.3;
+                    
+                    setSelectedNode({
+                      id: hazard.properties.id,
+                      type: 'hazard',
+                      properties: hazard.properties,
+                      x: x,
+                      y: y
+                    });
+                  }}
+                >
+                  <div className="flex items-center">
+                    <div 
+                      className="w-3 h-3 rounded-full mr-3" 
+                      style={{ backgroundColor: getHazardColor(hazard.properties.type, 1) }}
+                    ></div>
+                    <div className="flex-1">
+                      <div className="font-medium text-white">{hazard.properties.name}</div>
+                      <div className="text-xs text-white/70 capitalize">{hazard.properties.type}</div>
+                    </div>
+                    <div className="text-right">
+                      <div className="font-bold text-white">{(hazard.properties.severity * 100).toFixed(0)}%</div>
+                      <div className="text-xs text-white/70">Severity</div>
+                    </div>
+                  </div>
+                </motion.div>
+              ))}
+            </div>
+          ) : (
+            <div className="p-4 space-y-3">
+              {communityData.features.map(community => (
+                <motion.div 
+                  key={community.properties.id}
+                  whileHover={{ scale: 1.02 }}
+                  className="p-3 rounded-lg bg-white/5 cursor-pointer hover:bg-white/10 transition"
+                  onClick={() => {
+                    const canvas = canvasRef.current;
+                    if (!canvas) return;
+                    
+                    const rect = canvas.getBoundingClientRect();
+                    const index = communityData.features.findIndex(f => f.properties.id === community.properties.id);
+                    const x = (index + 1) * (rect.width / (communityData.features.length + 1));
+                    const y = rect.height * 0.7;
+                    
+                    setSelectedNode({
+                      id: community.properties.id,
+                      type: 'community',
+                      properties: community.properties,
+                      x: x,
+                      y: y
+                    });
+                  }}
+                >
+                  <div className="flex items-center">
+                    <div 
+                      className="w-3 h-3 rounded-full mr-3" 
+                      style={{ backgroundColor: getVulnerabilityColor(community.properties.vulnerabilityIndex) }}
+                    ></div>
+                    <div className="flex-1">
+                      <div className="font-medium text-white">{community.properties.name}</div>
+                      <div className="text-xs text-white/70">{formatNumber(community.properties.population)} people</div>
+                    </div>
+                    <div className="text-right">
+                      <div className="font-bold text-white">{(community.properties.vulnerabilityIndex * 100).toFixed(0)}%</div>
+                      <div className="text-xs text-white/70">Vulnerability</div>
+                    </div>
+                  </div>
+                </motion.div>
+              ))}
+            </div>
+          )}
+        </div>
+      </motion.div>
+
       {/* Legend */}
       <motion.div 
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.4 }}
-        className="absolute bottom-4 left-4 z-[1000] rounded-2xl p-5 w-60 bg-white/10 backdrop-blur-xl border border-white/20 shadow-xl"
+        transition={{ duration: 0.4, delay: 0.5 }}
+        className="absolute bottom-4  left-4 z-10 rounded-2xl p-5 w-60 bg-white/10 backdrop-blur-xl border border-white/20 shadow-xl"
       >
         <div className="flex items-center mb-3 text-indigo-300">
           <FiGlobe className="mr-2 text-lg" />
@@ -668,18 +899,20 @@ const Atlas: React.FC = () => {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 20 }}
             transition={{ duration: 0.3 }}
-            className="absolute top-20 left-4 z-[1000] bg-white/10 backdrop-blur-xl border border-white/20 shadow-xl rounded-xl p-5 w-80"
+            className="absolute top-20 left-96 z-10 bg-white/10 backdrop-blur-xl border border-white/20 shadow-xl rounded-xl p-5 w-80"
           >
             <div className="flex justify-between items-center mb-4">
               <div className="text-indigo-300 font-bold text-lg">
                 {selectedNode.properties.name}
               </div>
-              <button 
+              <motion.button 
+                whileHover={{ scale: 1.1 }}
+                whileTap={{ scale: 0.9 }}
                 onClick={() => setSelectedNode(null)} 
                 className="text-white/70 hover:text-white transition-colors p-1 rounded-full hover:bg-white/10"
               >
                 <FiX size={20} />
-              </button>
+              </motion.button>
             </div>
             <div className="text-white/80 text-sm space-y-3">
               {selectedNode.type === 'hazard' ? (
@@ -692,13 +925,18 @@ const Atlas: React.FC = () => {
                   </div>
                   <div className="flex justify-between items-center py-2 border-b border-white/10">
                     <span className="font-medium">Severity:</span>
-                    <div className="w-24 bg-white/10 rounded-full h-2">
-                      <div 
-                        className="bg-red-500 h-2 rounded-full" 
-                        style={{ width: `${selectedNode.properties.severity * 100}%` }}
-                      ></div>
+                    <div className="flex items-center gap-3">
+                      <div className="w-24 bg-white/10 rounded-full h-2">
+                        <div 
+                          className="h-2 rounded-full" 
+                          style={{ 
+                            width: `${selectedNode.properties.severity * 100}%`,
+                            background: getHazardColor(selectedNode.properties.type, 1)
+                          }}
+                        ></div>
+                      </div>
+                      <span className="font-medium w-10 text-right">{(selectedNode.properties.severity * 100).toFixed(0)}%</span>
                     </div>
-                    <span className="font-medium w-10 text-right">{(selectedNode.properties.severity * 100).toFixed(0)}%</span>
                   </div>
                   <div className="flex justify-between items-center py-2">
                     <span className="font-medium">Detected:</span>
@@ -713,13 +951,15 @@ const Atlas: React.FC = () => {
                   </div>
                   <div className="flex justify-between items-center py-2">
                     <span className="font-medium">Vulnerability:</span>
-                    <div className="w-24 bg-white/10 rounded-full h-2">
-                      <div 
-                        className="bg-gradient-to-r from-green-500 to-red-500 h-2 rounded-full" 
-                        style={{ width: `${selectedNode.properties.vulnerabilityIndex * 100}%` }}
-                      ></div>
+                    <div className="flex items-center gap-3">
+                      <div className="w-24 bg-white/10 rounded-full h-2">
+                        <div 
+                          className="bg-gradient-to-r from-green-500 to-red-500 h-2 rounded-full" 
+                          style={{ width: `${selectedNode.properties.vulnerabilityIndex * 100}%` }}
+                        ></div>
+                      </div>
+                      <span className="font-medium w-10 text-right">{(selectedNode.properties.vulnerabilityIndex * 100).toFixed(0)}%</span>
                     </div>
-                    <span className="font-medium w-10 text-right">{(selectedNode.properties.vulnerabilityIndex * 100).toFixed(0)}%</span>
                   </div>
                 </>
               )}
@@ -785,12 +1025,14 @@ const Atlas: React.FC = () => {
                   </div>
                 </div>
               </div>
-              <button 
-                className="w-full bg-indigo-500 hover:bg-indigo-600 text-white font-semibold py-3 rounded-xl shadow-md transition transform hover:scale-105"
+              <motion.button 
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                className="w-full bg-indigo-500 hover:bg-indigo-600 text-white font-semibold py-3 rounded-xl shadow-md transition"
                 onClick={() => setShowTutorial(false)}
               >
                 Get Started
-              </button>
+              </motion.button>
             </motion.div>
           </motion.div>
         )}
@@ -800,8 +1042,10 @@ const Atlas: React.FC = () => {
       <motion.button
         initial={{ opacity: 0, scale: 0.8 }}
         animate={{ opacity: 1, scale: 1 }}
+        whileHover={{ scale: 1.1 }}
+        whileTap={{ scale: 0.9 }}
         transition={{ delay: 0.5 }}
-        className="absolute bottom-4 right-4 z-[1000] bg-white/10 backdrop-blur-xl border border-white/20 rounded-full w-12 h-12 flex items-center justify-center text-white hover:bg-white/20 transition transform hover:scale-110"
+        className="absolute bottom-4 right-4 z-[1000] bg-white/10 backdrop-blur-xl border border-white/20 rounded-full w-12 h-12 flex items-center justify-center text-white hover:bg-white/20 transition"
         onClick={() => setShowTutorial(true)}
         title="Show Tutorial"
       >
@@ -813,7 +1057,7 @@ const Atlas: React.FC = () => {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.6 }}
-        className="absolute bottom-0 left-0 right-0 z-[1000] bg-black/70 text-white text-xs p-3 flex justify-between items-center backdrop-blur-sm"
+        className="absolute bottom-0 left-0 right-0 z-10 bg-black/70 text-white text-xs p-3 flex justify-between items-center backdrop-blur-sm"
       >
         <div className="flex items-center gap-4">
           <div className={`px-3 py-1 rounded-full ${equityLensActive ? 'bg-indigo-500/20 text-indigo-300' : 'bg-blue-500/20 text-blue-300'}`}>
@@ -835,6 +1079,31 @@ const Atlas: React.FC = () => {
           <div className="text-white/70">Connected</div>
         </div>
       </motion.div>
+
+      {/* Custom CSS for slider thumb */}
+      <style>
+        {`
+          .slider-thumb::-webkit-slider-thumb {
+            appearance: none;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: #6366f1;
+            cursor: pointer;
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.3);
+          }
+          
+          .slider-thumb::-moz-range-thumb {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: #6366f1;
+            cursor: pointer;
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.3);
+            border: none;
+          }
+        `}
+      </style>
     </div>
   );
 };
