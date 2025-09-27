@@ -345,7 +345,7 @@ const ChatBot = ({ onActionClick }) => {
           isMinimized ? 'w-80 h-16' : 'w-96 h-[500px]'
         }`}>
           
-          {/* Header - শুধু যখন minimized না তখন দেখাবে */}
+          {/* Header - minimized  */}
           {!isMinimized && (
             <div className="bg-gradient-to-r from-cyan-600 to-blue-700 text-white p-3 flex justify-between items-center sticky top-0 z-50">
               <div className="flex items-center space-x-2">
@@ -451,32 +451,32 @@ const ChatBot = ({ onActionClick }) => {
               </div>
 
               {/* Input Area - Fixed at bottom */}
-              <div className="border-t border-cyan-500/20 p-3 bg-gray-900/50">
-                <div className="flex space-x-2">
-                  <input
-                    type="text"
-                    value={inputValue}
-                    onChange={(e) => setInputValue(e.target.value)}
-                    placeholder="Ask about NASA data or ASTRA features..."
-                    className="flex-1 px-3 py-2 bg-gray-800 border border-cyan-500/30 rounded-full focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-transparent text-sm text-white placeholder-gray-400"
-                    onKeyDown={(e) => e.key === 'Enter' && handleSendMessage()}
-                  />
-                  <button
-                    onClick={handleSendMessage}
-                    disabled={isThinking}
-                    className="bg-gradient-to-r from-cyan-500 to-blue-600 text-white p-2 rounded-full hover:from-cyan-600 hover:to-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 shadow-lg"
-                  >
-                    <FaPaperPlane className="text-xs" />
-                  </button>
-                </div>
-                <p className="text-xs text-cyan-400 text-center mt-1">
-                  ASTRA Mission Control • Powered by NASA Data
-                </p>
-              </div>
+           <div className="border-t border-cyan-500/20 p-3 bg-gray-900/50 sticky bottom-0 z-40">
+  <div className="flex space-x-2">
+    <input
+      type="text"
+      value={inputValue}
+      onChange={(e) => setInputValue(e.target.value)}
+      placeholder="Ask about NASA data or ASTRA features..."
+      className="flex-1 px-3 py-2 bg-gray-800 border border-cyan-500/30 rounded-full focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-transparent text-sm text-white placeholder-gray-400"
+      onKeyDown={(e) => e.key === 'Enter' && handleSendMessage()}
+    />
+    <button
+      onClick={handleSendMessage}
+      disabled={isThinking}
+      className="bg-gradient-to-r from-cyan-500 to-blue-600 text-white p-2 rounded-full hover:from-cyan-600 hover:to-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 shadow-lg flex-shrink-0"
+    >
+      <FaPaperPlane className="text-xs" />
+    </button>
+  </div>
+  <p className="text-xs text-cyan-400 text-center mt-1">
+    ASTRA Mission Control • Powered by NASA Data
+  </p>
+</div>
             </div>
           ) : (
             /* Minimized State */
-            <div className="p-3 flex items-center justify-between bg-gradient-to-r from-cyan-600 to-blue-700 h-full">
+            <div className="p-3 flex items-center justify-between bg-gradient-to-r from-cyan-600 to-blue-700  sticky">
               <div className="flex items-center space-x-2">
                 <FaRobot className="text-white text-lg" />
                 <span className="font-medium text-white text-sm">ASTRA Mission Control</span>
