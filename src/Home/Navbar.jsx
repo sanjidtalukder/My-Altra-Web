@@ -11,12 +11,12 @@ const Navbar = () => {
     { name: "Simulate", path: "/simulate", icon: "🔬" },
     { name: "Impact", path: "/impact", icon: "📈" },
     { name: "Engage", path: "/engage", icon: "💬" },
-    { name: "Data Lab", path: "/datalabs", icon: "🧪" },
+    { name: "Data Lab", path: "/pulsenew", icon: "🧪" },
     // { name: "Data Lab", path: "/datalabs", icon: "" },
     // { name: "Data Lab", path: "/data-lab", icon: "🧪" },
     { name: "Vision Roadmap", path: "/vision-roadmap", icon: "🚀" },
-    { name: "New", path: "/new", icon: "💬" },
-    { name: "PulseNew", path: "/pulsenew", icon: "💬" },
+    // { name: "New", path: "/new", icon: "💬" },
+    // { name: "PulseNew", path: "/pulsenew", icon: "💬" },
      
   ];
 

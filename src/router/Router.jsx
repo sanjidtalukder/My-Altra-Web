@@ -8,7 +8,7 @@ import CityHeartbeat from "../Pages/CityHeartbeat";
 import Home from "../Home/Home";
 import Vision from "../Pages/Vision";
 import Engage from "../Pages/Engage";
-import DataLab from "../Pages/DataLab";
+
 import Atlas from "../components/Atlas";
 import New from "../Pages/New";
 import PulseNew from "../Pages/Pulse/PulseNew";
@@ -29,7 +29,8 @@ export const router = createBrowserRouter([
       { path: "simulate", element:<Simulate></Simulate>  },
       { path: "impact", element: <CityHeartbeat></CityHeartbeat> },
       { path: "engage", element: <Engage></Engage> },
-      { path: "data-lab", element: <DataLab></DataLab> },
+      // { path: "data-lab", element: <DataLab></DataLab> },
+      { path: "pulsenew",  element: <PulseNew></PulseNew> },
       { path: "vision-roadmap", element: <Vision></Vision> },
       { path: "new", element: <New></New> },
       { path: "pulsenew", element: <PulseNew></PulseNew> },
