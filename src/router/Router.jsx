@@ -13,6 +13,8 @@ import Atlas from "../components/Atlas";
 import New from "../Pages/New";
 import PulseNew from "../Pages/Pulse/PulseNew";
 import DataLabs from "../components/DataLabs";
+import Login from "../components/Login";
+import Register from "../components/Register";
 
 
 
@@ -35,6 +37,8 @@ export const router = createBrowserRouter([
       { path: "new", element: <New></New> },
       { path: "pulsenew", element: <PulseNew></PulseNew> },
       { path: "datalabs", element: <DataLabs></DataLabs> },
+      { path: "/login", element: <Login></Login> },
+      { path: "/register", element: <Register></Register> },
     ],
   },
 ]);

@@ -58,7 +58,7 @@ const defaultMetrics = {
 
 const defaultImages = {
   beforeImageUrl:
-    'https://images.unsplash.com/photo-1534274988757-a28bf1a57c17?q=80&w=1200&auto=format&fit=crop',
+    'https://plus.unsplash.com/premium_photo-1714023800301-83390690e1f0?w=600&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MXx8Z3JlZW4lMjBjaXRpZXN8ZW58MHx8MHx8fDA%3D',
   afterImageUrl:
     'https://images.unsplash.com/photo-1523978591478-c753949ff840?q=80&w=1200&auto=format&fit=crop',
   interventionName: 'Green Infrastructure + Cool Roofs',

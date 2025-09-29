@@ -47,10 +47,15 @@ const defaultImages = {
   // Use NASA-derived rasters exported as tiles or static images for production:
   // Before: e.g., MODIS LST hottest week composite; After: the same period post-intervention.
   // PRODUCTION: Swap with actual generated imagery URLs or tile snapshots.
-  beforeImageUrl:
-    'https://images.unsplash.com/photo-1534274988757-a28bf1a57c17?q=80&w=1200&auto=format&fit=crop', // placeholder "hot" tones
+  // beforeImageUrl:
+  //   'https://images.unsplash.com/photo-1534274988757-a28bf1a57c17?q=80&w=1200&auto=format&fit=crop', // placeholder "hot" tones
+  // afterImageUrl:
+  //   'https://images.unsplash.com/photo-1523978591478-c753949ff840?q=80&w=1200&auto=format&fit=crop', // placeholder "cooler/greener"
+  // interventionName: 'Green Infrastructure + Cool Roofs',
+   beforeImageUrl:
+    'https://cdn.pixabay.com/photo/2021/02/13/14/51/building-6011756_1280.jpg', // placeholder "hot" tones
   afterImageUrl:
-    'https://images.unsplash.com/photo-1523978591478-c753949ff840?q=80&w=1200&auto=format&fit=crop', // placeholder "cooler/greener"
+    'https://plus.unsplash.com/premium_photo-1714023800301-83390690e1f0?w=600&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MXx8Z3JlZW4lMjBjaXRpZXN8ZW58MHx8MHx8fDA%3D', // placeholder "cooler/greener"
   interventionName: 'Green Infrastructure + Cool Roofs',
 };
 

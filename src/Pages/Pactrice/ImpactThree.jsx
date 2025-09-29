@@ -270,8 +270,14 @@ const Impact = () => {
               className="h-64"
               before={
                 <div className="relative h-full">
-                  <img 
+                  {/* <img 
                     src="https://images.unsplash.com/photo-1593537612370-46c0c0226c92?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=800&q=80" 
+                    alt="Before intervention - heat island effect" 
+                    className="w-full h-full object-cover"
+                  /> */}
+
+                    <img 
+                    src="https://plus.unsplash.com/premium_photo-1714023800301-83390690e1f0?w=600&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MXx8Z3JlZW4lMjBjaXRpZXN8ZW58MHx8MHx8fDA%3D" 
                     alt="Before intervention - heat island effect" 
                     className="w-full h-full object-cover"
                   />
