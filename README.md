@@ -3,6 +3,8 @@
 ASTRA Command (Web) is the mission control center for resilient cities.  
 It transforms NASA’s open data APIs into actionable intelligence, giving planners the power to detect crises, simulate interventions, engage citizens, and verify impact — all in one immersive dashboard.  
 
+<img width="1919" height="878" alt="Screenshot 2025-10-03 160912" src="https://github.com/user-attachments/assets/0235881f-9704-4f6b-b9c5-3a2be3288456" />
+
 # 🌍 From space to street to solution, Astra Command Web is where data becomes decision.  
 
 ---
@@ -12,31 +14,41 @@ It transforms NASA’s open data APIs into actionable intelligence, giving plann
 # 📊 Pulse – The Early Warning System
 - Real‑time wellbeing index powered by NASA APIs.  
 - Heat, flood, and air quality hotspots visualized on a live map.  
-- Instant detection of crises before they explode.  
+- Instant detection of crises before they explode.
+  
+<img width="1908" height="881" alt="Screenshot 2025-10-03 160948" src="https://github.com/user-attachments/assets/1f7a2161-3a35-425f-b1e6-c171ad8438ab" />
 
 # 🧠 DataLab – The Orbital Brain
 - Fuses multiple NASA APIs: MODIS (heat), IMERG (flood), Landsat (vegetation), VIIRS (energy), GRACE (water stress), SEDAC (socio‑economic).  
 - Machine learning models predict patterns of environmental injustice.  
-- Interactive map layers for deep exploration.  
+- Interactive map layers for deep exploration.
+  
+<img width="1903" height="875" alt="Screenshot 2025-10-03 161633" src="https://github.com/user-attachments/assets/e0576b96-010c-4c2a-9d3e-4819924e8726" />
 
 # 🏙 Simulate – Urban Surgery
 - Test interventions before they’re built.  
 - Cooling corridors with MODIS thermal data.  
 - Drainage systems with IMERG flood models.  
 - Green roofs with Landsat NDVI analysis.  
-- Before/after sliders for instant visual impact.  
+- Before/after sliders for instant visual impact.
+  
+<img width="1909" height="891" alt="Screenshot 2025-10-03 161038" src="https://github.com/user-attachments/assets/96e9bb51-9bcf-4910-9341-6f46ad19adc3" />
 
 # 🗳 Engage – Democracy Meets Data
 - Citizens vote on proposed interventions directly in the dashboard.  
 - Transparent feedback loop: “You Said → We Did.”  
-- Powered by NASA SEDAC socio‑economic data for equity‑driven planning.  
+- Powered by NASA SEDAC socio‑economic data for equity‑driven planning.
+  
+<img width="1911" height="898" alt="Screenshot 2025-10-03 161814" src="https://github.com/user-attachments/assets/c05fa79d-c77f-41d6-bf6e-6025b7711ef3" />
 
 # ✅ Impact – NASA‑Verified Results
 - Closes the loop with measurable outcomes.  
 - MODIS confirms temperature drops.  
 - Landsat shows greenery increase.  
 - IMERG validates flood protection.  
-- Every number is verified by NASA’s own satellites.  
+- Every number is verified by NASA’s own satellites.
+  
+<img width="1901" height="881" alt="Screenshot 2025-10-03 161050" src="https://github.com/user-attachments/assets/eacb5533-8cfd-4dc8-aa01-35084a5258bc" />
 
 ---
 
