@@ -1,37 +1,37 @@
-🚀 ASTRA Command – Web Dashboard
+# 🚀 ASTRA Command – Web Dashboard
 
 ASTRA Command (Web) is the mission control center for resilient cities.  
 It transforms NASA’s open data APIs into actionable intelligence, giving planners the power to detect crises, simulate interventions, engage citizens, and verify impact — all in one immersive dashboard.  
 
-🌍 From space to street to solution, Astra Command Web is where data becomes decision.  
+# 🌍 From space to street to solution, Astra Command Web is where data becomes decision.  
 
 ---
 
-✨ Features
+# ✨ Features
 
-📊 Pulse – The Early Warning System
+# 📊 Pulse – The Early Warning System
 - Real‑time wellbeing index powered by NASA APIs.  
 - Heat, flood, and air quality hotspots visualized on a live map.  
 - Instant detection of crises before they explode.  
 
-🧠 DataLab – The Orbital Brain
+# 🧠 DataLab – The Orbital Brain
 - Fuses multiple NASA APIs: MODIS (heat), IMERG (flood), Landsat (vegetation), VIIRS (energy), GRACE (water stress), SEDAC (socio‑economic).  
 - Machine learning models predict patterns of environmental injustice.  
 - Interactive map layers for deep exploration.  
 
-🏙 Simulate – Urban Surgery
+# 🏙 Simulate – Urban Surgery
 - Test interventions before they’re built.  
 - Cooling corridors with MODIS thermal data.  
 - Drainage systems with IMERG flood models.  
 - Green roofs with Landsat NDVI analysis.  
 - Before/after sliders for instant visual impact.  
 
-🗳 Engage – Democracy Meets Data
+# 🗳 Engage – Democracy Meets Data
 - Citizens vote on proposed interventions directly in the dashboard.  
 - Transparent feedback loop: “You Said → We Did.”  
 - Powered by NASA SEDAC socio‑economic data for equity‑driven planning.  
 
-✅ Impact – NASA‑Verified Results
+# ✅ Impact – NASA‑Verified Results
 - Closes the loop with measurable outcomes.  
 - MODIS confirms temperature drops.  
 - Landsat shows greenery increase.  
@@ -61,9 +61,9 @@ NASA APIs Integrated:
 
 ---
 
-🚀 Getting Started
+# 🚀 Getting Started
 
-✅ Prerequisites
+# ✅ Prerequisites
 - Node.js (18+)  
 - npm or yarn  
 - Firebase Project (with Google OAuth enabled)  
@@ -135,7 +135,7 @@ Then drag & drop /dist folder into Netlify dashboard
 
 ---
 
-🔒 Security
+# 🔒 Security
 - Firebase Security Rules  
 - Protected Routes  
 - Environment variables for sensitive config  
@@ -143,20 +143,20 @@ Then drag & drop /dist folder into Netlify dashboard
 
 ---
 
-📱 Responsive Design
+# 📱 Responsive Design
 - Mobile‑first approach  
 - Grid‑based layouts  
 - Touch‑friendly navigation  
 
 ---
 
-🎨 Customization
+# 🎨 Customization
 - Edit tailwind.config.js → change color schemes & spacing  
 - Style components using Tailwind classes or shadcn/ui overrides  
 
 ---
 
-📈 Impact Metrics
+# 📈 Impact Metrics
 
 - 🌡 4.2°C cooler streets (MODIS verified)  
 - 🌳 28% more greenery (Landsat NDVI)  
@@ -166,7 +166,7 @@ Then drag & drop /dist folder into Netlify dashboard
 
 ---
 
-🤝 Contributing
+# 🤝 Contributing
 1. Fork the repo  
 2. Create a branch → git checkout -b feature/awesome  
 3. Commit → git commit -m "Add awesome feature"  
@@ -175,7 +175,7 @@ Then drag & drop /dist folder into Netlify dashboard
 
 ---
 
-🙏 Credits & Acknowledgments
+# 🙏 Credits & Acknowledgments
 
 - NASA Open Data APIs → MODIS, IMERG, Landsat, VIIRS, GRACE, SEDAC  
 - Firebase Team → Robust backend services  
