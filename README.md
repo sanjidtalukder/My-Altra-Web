@@ -1,12 +1,53 @@
-# React + Vite
+# Re-run the file creation since the environment was reset.
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+readme_proportional = """# 🌌 Astra Command – NASA Space Apps Challenge 2025
 
-Currently, two official plugins are available:
+A responsive, Firebase‑backed web app that lets users explore, simulate, and collaborate on space‑related data.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+---
 
-## Expanding the ESLint configuration
+## 📖 Table of Contents
+- [Project Overview](#-project-overview)
+- [Key Features](#-key-features)
+- [Tech Stack](#️-tech-stack)
+- [Repository Structure](#-repository-structure)
+- [Getting Started Locally](#%EF%B8%8F-getting-started-locally)
+- [Firebase & Environment Variables](#-firebase--environment-variables)
+- [Scripts & Commands](#-scripts--commands)
+- [Deploying](#-deploying)
+- [Navigation (Navbar) Explained](#-navigation-navbar-explained)
+- [Contributing](#-contributing)
+- [License](#-license)
+- [Contact & Credits](#-contact--credits)
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+---
+
+## 🌟 Project Overview
+**Astra Command** (pronounced *Astra Command*) is a single‑page application built for the **NASA Space Apps Challenge 2025**.  
+It provides mission‑critical dashboards, real‑time simulations, team collaboration tools, and an advanced data‑lab — all secured with Firebase authentication.
+
+---
+
+## ✨ Key Features
+- ✅ **Responsive Navbar** – Desktop & mobile menus, user avatar, dropdowns, scroll‑aware header  
+- 🔐 **Firebase Auth** – Google & Email‑Password sign‑in, state management, sign‑out flow  
+- 🔄 **Dynamic Routing** – React‑Router‑DOM v6, active‑link highlighting, tooltips  
+- 📱 **PWA‑ready** – Service worker skeleton for offline usage  
+- ♿ **Accessibility‑first** – Semantic HTML, ARIA labels, keyboard‑friendly navigation  
+- 🎨 **Tailwind‑styled UI** – Design tokens, dark‑mode ready (future roadmap)  
+- 🚀 **Deploy‑anywhere** – Works on Netlify, Vercel, Firebase Hosting, etc.
+
+---
+
+## 🛠️ Tech Stack
+| Layer            | Technology                                    |
+|------------------|-----------------------------------------------|
+| **Frontend**     | React 18, React‑Router‑DOM, TailwindCSS 3     |
+| **Auth & DB**    | Firebase Authentication (Email / Google)      |
+| **Bundler**      | Vite (fast dev server & optimized build)      |
+| **Hosting**      | Netlify, Vercel, Firebase Hosting             |
+| **Version Ctrl** | Git + GitHub                                  |
+
+---
+
+## 📂 Repository Structure
